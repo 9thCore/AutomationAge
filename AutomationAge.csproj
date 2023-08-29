@@ -15,6 +15,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Assets\**" />
+    <EmbeddedResource Remove="Assets\**" />
+    <None Remove="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.1.0" />
@@ -26,10 +32,6 @@
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -17,20 +17,17 @@ namespace AutomationAge.Systems
         };
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(Builder), nameof(Builder.UpdateAllowed))]
-        public static void Postfix(ref bool __result)
+        [HarmonyPatch(typeof(Builder), nameof(Builder.CheckAsSubModule))]
+        public static void Postfix(Collider hitCollider, ref bool __result)
         {
-            if(!__result) { return; }
+            if(hitCollider == null) { return; }
+            if (!__result) { return; }
 
             TechType type = Builder.lastTechType;
-            if(!specialConstructables.ContainsKey(type)) { return; }
+            if (!specialConstructables.ContainsKey(type)) { return; }
 
-            GameObject hitObj = null;
-            Vector3 hitPosition = default;
-            UWE.Utils.TraceForTarget(Builder.placePosition, Camera.main.transform.forward, Builder.prefab, Builder.placeMaxDistance, ref hitObj, ref hitPosition);
-            if(hitObj == null) { return; }
-
-            __result = specialConstructables[type](hitObj);
+            GameObject module = hitCollider.transform.parent.gameObject;
+            __result = specialConstructables[type](module);
         }
     }
 }
