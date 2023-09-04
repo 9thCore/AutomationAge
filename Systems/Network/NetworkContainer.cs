@@ -2,9 +2,10 @@
 
 namespace AutomationAge.Systems.Network
 {
-    internal class NetworkBroadcaster : MonoBehaviour
+    internal class NetworkContainer : MonoBehaviour
     {
-        public bool isAttached = false;
+        public bool interfaceAttached = false;
+        public bool requesterAttached = false;
         private bool broadcasting = false;
 
         public void StartBroadcasting()

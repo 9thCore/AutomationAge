@@ -7,52 +7,35 @@ namespace AutomationAge.Systems.Network
 {
     internal class NetworkInterface : AttachableModule
     {
-        private NetworkBroadcaster broadcaster = null;
+        private NetworkContainer container = null;
 
         public override void OnAttach(GameObject module)
         {
-            broadcaster = module.EnsureComponent<NetworkBroadcaster>();
-            broadcaster.isAttached = true;
+            container = module.EnsureComponent<NetworkContainer>();
+            container.interfaceAttached = true;
         }
 
         public void Start()
         {
-            if (broadcaster == null) { Attach(); }
-            broadcaster.StartBroadcasting();
+            if (container == null) { Attach(); }
+            container.StartBroadcasting();
         }
 
         public void OnEnable()
         {
-            if (broadcaster == null) { return; }
-            broadcaster.StartBroadcasting();
+            if (container == null) { return; }
+            container.StartBroadcasting();
         }
 
         public void OnDisable()
         {
-            if (broadcaster == null) { return; }
-            broadcaster.StopBroadcasting();
+            if (container == null) { return; }
+            container.StopBroadcasting();
         }
 
         public void OnDestroy()
         {
-            broadcaster.isAttached = false;
-        }
-
-        public override void Load()
-        {
-            Dictionary<string, InterfaceSaveData> interfaceSaveData = SaveHandler.data.interfaceSaveData;
-            string id = gameObject.GetComponent<PrefabIdentifier>().id;
-            if (interfaceSaveData.TryGetValue(id, out InterfaceSaveData data))
-            {
-                data.LoadInterfaceData(this);
-            }
-        }
-
-        public override void Save()
-        {
-            Dictionary<string, InterfaceSaveData> interfaceSaveData = SaveHandler.data.interfaceSaveData;
-            string id = gameObject.GetComponent<PrefabIdentifier>().id;
-            interfaceSaveData[id] = new InterfaceSaveData(this);
+            container.interfaceAttached = false;
         }
     }
 }

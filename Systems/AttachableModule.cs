@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace AutomationAge.Systems
@@ -12,8 +13,6 @@ namespace AutomationAge.Systems
         public Vector3 attachedPos = Vector3.zero;
 
         public virtual void OnAttach(GameObject module) { }
-        public virtual void Save() { }
-        public virtual void Load() { }
 
         public void AttachToModule(GameObject module)
         {
@@ -66,6 +65,23 @@ namespace AutomationAge.Systems
                 
                 Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {attachedID}");
             }
+        }
+
+        public void Load()
+        {
+            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+            string id = gameObject.GetComponent<PrefabIdentifier>().id;
+            if (attachableSaveData.TryGetValue(id, out AttachableSaveData data))
+            {
+                data.LoadAttachableData(this);
+            }
+        }
+
+        public void Save()
+        {
+            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+            string id = gameObject.GetComponent<PrefabIdentifier>().id;
+            attachableSaveData[id] = new AttachableSaveData(this);
         }
     }
 }

@@ -10,26 +10,26 @@ namespace AutomationAge.Systems
     [FileName("save_data")]
     internal class SaveData : SaveDataCache
     {
-        public Dictionary<string, InterfaceSaveData> interfaceSaveData = new Dictionary<string, InterfaceSaveData>();
+        public Dictionary<string, AttachableSaveData> attachableSaveData = new Dictionary<string, AttachableSaveData>();
     }
 
-    internal class InterfaceSaveData
+    internal class AttachableSaveData
     {
         public string attachedID;
         public Vector3 attachedPos;
 
-        public InterfaceSaveData() { }
+        public AttachableSaveData() { }
 
-        public InterfaceSaveData(NetworkInterface networkInterface)
+        public AttachableSaveData(AttachableModule module)
         {
-            attachedID = networkInterface.attachedID;
-            attachedPos = networkInterface.attachedPos;
+            attachedID = module.attachedID;
+            attachedPos = module.attachedPos;
         }
 
-        public void LoadInterfaceData(NetworkInterface networkInterface)
+        public void LoadAttachableData(AttachableModule module)
         {
-            networkInterface.attachedID = attachedID;
-            networkInterface.attachedPos = attachedPos;
+            module.attachedID = attachedID;
+            module.attachedPos = attachedPos;
         }
     }
 
