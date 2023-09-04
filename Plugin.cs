@@ -33,6 +33,9 @@ namespace AutomationAge
         public void Start()
         {
             ItemInterface.Register();
+            ItemRequester.Register();
+
+            LanguageHandler.RegisterLocalizationFolder("Language");
         }
     }
 }

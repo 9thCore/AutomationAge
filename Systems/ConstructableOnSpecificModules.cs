@@ -12,32 +12,89 @@ namespace AutomationAge.Systems
     [HarmonyPatch]
     internal static class ConstructableOnSpecificModules
     {
+        [AssertLocalization]
+        private const string deconstructAttachedMessage = "DeconstructAttachedError";
+
         private static Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
         {
-            { ItemInterface.Info.TechType, obj => {
-                if(obj.TryGetComponent(out NetworkBroadcaster broadcaster))
-                {
-                    return !broadcaster.isAttached;
-                }
+            {
+                ItemInterface.Info.TechType,
+                obj => {
+                    if(obj.TryGetComponent(out NetworkContainer container))
+                    {
+                        return !container.interfaceAttached;
+                    }
 
-                return false;
-            } }
+                    return false;
+                }
+            },
+            {
+                ItemRequester.Info.TechType,
+                obj =>
+                {
+                    if(obj.TryGetComponent(out NetworkContainer container))
+                    {
+                        return !container.requesterAttached;
+                    }
+
+                    return false;
+                }
+            }
         };
 
         public static GameObject attachedModule = null;
 
+        // Allow constructing on modules if they fit the specified criteria
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Builder), nameof(Builder.CheckAsSubModule))]
-        public static void Postfix(Collider hitCollider, ref bool __result)
+        public static void CheckAsSubModulePostfix(Collider hitCollider, ref bool __result)
         {
-            if (hitCollider == null) { return; }
             if (!__result) { return; }
 
             TechType type = Builder.lastTechType;
             if (!specialConstructables.ContainsKey(type)) { return; }
 
-            attachedModule = hitCollider.transform.parent.gameObject;
-            __result = specialConstructables[type](attachedModule);
+            GameObject module = hitCollider.transform.parent.gameObject;
+            if(!module.TryGetComponent(out Constructable constructable)) { return; }
+            if(constructable.constructedAmount < 1f)
+            {
+                // Do not allow construction if the module is not fully constructed
+                __result = false;
+                return;
+            }
+
+            attachedModule = module;
+            __result = specialConstructables[type](module);
+        }
+
+        // Disallow deconstruction of module if it has something attached to it
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Constructable), nameof(Constructable.DeconstructionAllowed))]
+        public static bool DeconstructionAllowedPrefix(Constructable __instance, ref bool __result, ref string reason)
+        {
+            GameObject obj = __instance.gameObject;
+            if (obj.TryGetComponent(out NetworkContainer container))
+            {
+                __result = !container.IsAnythingAttached();
+                reason = Language.main.Get(deconstructAttachedMessage);
+                return false;
+            }
+
+            return true;
+        }
+
+        // Remove "Press [KEY] to deconstruct" text if the module has something attached to it
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(BuilderTool), nameof(BuilderTool.OnHover), typeof(Constructable))]
+        public static bool OnHoverPrefix(Constructable constructable)
+        {
+            GameObject obj = constructable.gameObject;
+            if (obj.TryGetComponent(out NetworkContainer container))
+            {
+                return !container.IsAnythingAttached();
+            }
+
+            return true;
         }
     }
 }

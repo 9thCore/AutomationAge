@@ -27,5 +27,10 @@ namespace AutomationAge.Systems.Network
             BaseData data = baseRoot.EnsureComponent<BaseData>();
             data.StopBroadcastingGameObject(gameObject);
         }
+
+        public bool IsAnythingAttached()
+        {
+            return interfaceAttached || requesterAttached;
+        }
     }
 }

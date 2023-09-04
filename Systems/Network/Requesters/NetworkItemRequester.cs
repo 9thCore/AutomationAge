@@ -4,17 +4,20 @@ namespace AutomationAge.Systems.Network.Requesters
 {
     internal class NetworkItemRequester : AttachableModule
     {
-        private NetworkContainer container = null;
 
         public override void OnAttach(GameObject module)
         {
-            container = module.EnsureComponent<NetworkContainer>();
             container.requesterAttached = true;
         }
 
-        public void Start()
+        public override void StartBehaviour()
         {
+            
+        }
 
+        public override void StopBehaviour()
+        {
+            
         }
 
         public void OnDestroy()
