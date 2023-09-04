@@ -1,18 +1,13 @@
-﻿using Nautilus.Assets.PrefabTemplates;
-using Nautilus.Assets;
+﻿using Nautilus.Assets;
 using Nautilus.Crafting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static CraftData;
 using Nautilus.Utility;
 using Nautilus.Assets.Gadgets;
 using UnityEngine;
-using UnityEngine.UI;
+using AutomationAge.Systems;
+using AutomationAge.Systems.Network;
 
-namespace AutomationAge.Buildables.Transportation.Items
+namespace AutomationAge.Buildables.Network.Items
 {
     internal static class ItemInterface
     {
@@ -34,6 +29,7 @@ namespace AutomationAge.Buildables.Transportation.Items
             GameObject obj = Assets.GetGameObject("ItemInterface");
             GameObject model = obj.transform.Find("ItemInterfaceModel").gameObject;
 
+            obj.AddComponent<NetworkInterface>();
             ConstructableFlags constructableFlags = ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Base | ConstructableFlags.Wall;
             PrefabUtils.AddBasicComponents(obj, "ItemInterface", Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);

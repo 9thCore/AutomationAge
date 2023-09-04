@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace AutomationAge
+namespace AutomationAge.Systems
 {
     internal static class Assets
     {
 
-        public static string AssetsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
+        public static string AssetsPath = Path.Combine(Plugin.ModPath, "Assets");
         public static AssetBundle MainBundle { get; private set; }
 
         public static Dictionary<string, Texture2D> Sprites { get; private set; } = new Dictionary<string, Texture2D>();
