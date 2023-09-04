@@ -1,7 +1,9 @@
 ﻿using AutomationAge.Systems.Network;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UWE;
 
 namespace AutomationAge.Systems
 {
@@ -13,6 +15,8 @@ namespace AutomationAge.Systems
         internal NetworkContainer container;
         public string attachedID = null;
         public Vector3 attachedPos = Vector3.zero;
+
+        private bool queuedSave = false;
 
         public virtual void OnAttach(GameObject module) { }
         public virtual void StartBehaviour() { }
@@ -40,7 +44,8 @@ namespace AutomationAge.Systems
 
         public void Start()
         {
-            if (container == null) { Attach(); }
+            if (container == null) { return; }
+            if (queuedSave) { Save(); queuedSave = false; } // We can save now, so do that
             StartBehaviour();
         }
 
@@ -56,38 +61,48 @@ namespace AutomationAge.Systems
             StopBehaviour();
         }
 
-        public void Attach()
+        public void Awake()
         {
-
+            // If this was just constructed, then we can immediately attach
             GameObject module = ConstructableOnSpecificModules.attachedModule;
-            if (module != null)
+            if (module == null)
             {
-                // Constructed just now, so we have a module we can attach to
-                AttachToModule(module);
+                // Was not just constructed, so have to do some more trickery
+                CoroutineHost.StartCoroutine(Attach());
+                return;
             }
-            else
+
+            AttachToModule(module);
+        }
+
+        public IEnumerator Attach()
+        {
+            // Constructed last session, so we don't have a reference to the attached module
+            // Attempt to find module to re-attach to
+
+            // Wait until the prefab identifier is available
+            if (!gameObject.TryGetComponent(out PrefabIdentifier identifier1)) { yield break; }
+            yield return new WaitUntil(() => !string.IsNullOrEmpty(identifier1.id));
+
+            Load();
+
+            Collider[] colliders = Physics.OverlapBox(attachedPos, SearchRadius);
+
+            for (int i = 0; i < colliders.Length; i++)
             {
-                // Constructed last session, so we don't have a reference to the attached module
-                // Attempt to find module to re-attach to
-                Load();
+                GameObject obj = colliders[i].gameObject;
+                GameObject parent = obj.transform.parent.gameObject;
+                if (parent == null) { continue; }
 
-                Collider[] colliders = Physics.OverlapBox(attachedPos, SearchRadius);
-
-                for (int i = 0; i < colliders.Length; i++)
+                if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
                 {
-                    GameObject obj = colliders[i].gameObject;
-                    GameObject parent = obj.transform.parent.gameObject;
-                    if (parent == null) { continue; }
-
-                    if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
-                    {
-                        AttachToModule(parent);
-                        return;
-                    }
+                    AttachToModule(parent);
+                    yield break;
                 }
-                
-                Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {attachedID}");
             }
+
+            Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {attachedID}. Out!");
+            Destroy(gameObject);
         }
 
         public void Load()
@@ -104,6 +119,8 @@ namespace AutomationAge.Systems
         {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
             string id = gameObject.GetComponent<PrefabIdentifier>().id;
+            if(string.IsNullOrEmpty(id)) { queuedSave = true; return; } // We can't save yet, so queue that for later
+
             attachableSaveData[id] = new AttachableSaveData(this);
         }
     }
