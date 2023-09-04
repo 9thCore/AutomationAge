@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace AutomationAge.Systems.Network
 {
-    // Generic class in case I ever decide to add more functionality than item automation :]
     internal class NetworkInterface : AttachableModule
     {
         private NetworkBroadcaster broadcaster = null;
