@@ -1,18 +1,22 @@
-﻿using System;
+﻿using AutomationAge.Systems.Network;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace AutomationAge.Systems
 {
-    internal class AttachableModule : MonoBehaviour
+    public class AttachableModule : MonoBehaviour
     {
         // misnomer it actually searches in a box lol
         private static readonly Vector3 SearchRadius = new Vector3(1f, 1f, 1f);
 
+        internal NetworkContainer container;
         public string attachedID = null;
         public Vector3 attachedPos = Vector3.zero;
 
         public virtual void OnAttach(GameObject module) { }
+        public virtual void StartBehaviour() { }
+        public virtual void StopBehaviour() { }
 
         public void AttachToModule(GameObject module)
         {
@@ -28,9 +32,28 @@ namespace AutomationAge.Systems
 
             attachedID = identifier.id;
             attachedPos = module.transform.position;
+            container = module.EnsureComponent<NetworkContainer>();
             OnAttach(module);
 
             Save();
+        }
+
+        public void Start()
+        {
+            if (container == null) { Attach(); }
+            StartBehaviour();
+        }
+
+        public void OnEnable()
+        {
+            if (container == null) { return; }
+            StartBehaviour();
+        }
+
+        public void OnDisable()
+        {
+            if (container == null) { return; }
+            StopBehaviour();
         }
 
         public void Attach()

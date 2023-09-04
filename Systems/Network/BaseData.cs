@@ -12,7 +12,6 @@ namespace AutomationAge.Systems.Network
             if (obj.TryGetComponent(out StorageContainer sContainer))
             {
                 storageContainers.Add(sContainer);
-                UpdateContainers();
                 return;
             }
         }
@@ -22,16 +21,8 @@ namespace AutomationAge.Systems.Network
             if (obj.TryGetComponent(out StorageContainer sContainer))
             {
                 storageContainers.Remove(sContainer);
-                UpdateContainers();
                 return;
             }
-        }
-
-        public void UpdateContainers()
-        {
-            Plugin.Logger.LogInfo("Containers: [");
-            storageContainers.ForEach(Plugin.Logger.LogInfo);    
-            Plugin.Logger.LogInfo("]");
         }
     }
 }
