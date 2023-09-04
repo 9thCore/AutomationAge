@@ -46,7 +46,6 @@ namespace AutomationAge.Systems
         {
             if (container == null) { return; }
             if (queuedSave) { Save(); queuedSave = false; } // We can save now, so do that
-            StartBehaviour();
         }
 
         public void OnEnable()
