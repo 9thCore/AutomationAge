@@ -17,6 +17,7 @@ namespace AutomationAge.Systems
     {
         public string attachedID;
         public Vector3 attachedPos;
+        public bool fullyConstructed;
 
         public AttachableSaveData() { }
 
@@ -24,12 +25,17 @@ namespace AutomationAge.Systems
         {
             attachedID = module.attachedID;
             attachedPos = module.attachedPos;
+            if(module.TryGetComponent(out Constructable constructable))
+            {
+                fullyConstructed = constructable.constructed;
+            }
         }
 
         public void LoadAttachableData(AttachableModule module)
         {
             module.attachedID = attachedID;
             module.attachedPos = attachedPos;
+            module.fullyConstructed = fullyConstructed;
         }
     }
 

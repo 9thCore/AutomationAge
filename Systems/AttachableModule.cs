@@ -15,8 +15,10 @@ namespace AutomationAge.Systems
         internal NetworkContainer container;
         public string attachedID = null;
         public Vector3 attachedPos = Vector3.zero;
+        public bool fullyConstructed = false;
 
         private bool queuedSave = false;
+        private bool firstRun = true;
 
         public virtual void OnAttach(GameObject module) { }
         public virtual void StartBehaviour() { }
@@ -51,12 +53,18 @@ namespace AutomationAge.Systems
         public void OnEnable()
         {
             if (container == null) { return; }
+            if (firstRun) { return; }
             StartBehaviour();
         }
 
         public void OnDisable()
         {
             if (container == null) { return; }
+            if (firstRun)
+            {
+                firstRun = false;
+                return;
+            }
             StopBehaviour();
         }
 
@@ -67,6 +75,7 @@ namespace AutomationAge.Systems
             if (module == null)
             {
                 // Was not just constructed, so have to do some more trickery
+                firstRun = false;
                 CoroutineHost.StartCoroutine(Attach());
                 return;
             }
@@ -96,6 +105,7 @@ namespace AutomationAge.Systems
                 if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
                 {
                     AttachToModule(parent);
+                    if(fullyConstructed) { StartBehaviour(); }
                     yield break;
                 }
             }
