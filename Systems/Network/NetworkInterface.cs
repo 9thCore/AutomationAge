@@ -20,7 +20,7 @@ namespace AutomationAge.Systems.Network
             container.StopBroadcasting();
         }
 
-        public void OnDestroy()
+        public override void RemoveAttachable()
         {
             container.interfaceAttached = false;
         }

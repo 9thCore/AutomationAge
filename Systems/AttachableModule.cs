@@ -17,12 +17,12 @@ namespace AutomationAge.Systems
         public Vector3 attachedPos = Vector3.zero;
         public bool fullyConstructed = false;
 
-        private bool queuedSave = false;
         private bool firstRun = true;
 
         public virtual void OnAttach(GameObject module) { }
         public virtual void StartBehaviour() { }
         public virtual void StopBehaviour() { }
+        public virtual void RemoveAttachable() { }
 
         public void AttachToModule(GameObject module)
         {
@@ -41,13 +41,12 @@ namespace AutomationAge.Systems
             container = module.EnsureComponent<NetworkContainer>();
             OnAttach(module);
 
-            Save();
+            CoroutineHost.StartCoroutine(DelayedSave());
         }
 
         public void Start()
         {
             if (container == null) { return; }
-            if (queuedSave) { Save(); queuedSave = false; } // We can save now, so do that
         }
 
         public void OnEnable()
@@ -66,6 +65,12 @@ namespace AutomationAge.Systems
                 return;
             }
             StopBehaviour();
+        }
+
+        public void OnDestroy()
+        {
+            RemoveAttachable();
+            Unsave();
         }
 
         public void Awake()
@@ -114,6 +119,13 @@ namespace AutomationAge.Systems
             Destroy(gameObject);
         }
 
+        public void Unsave()
+        {
+            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+            string id = gameObject.GetComponent<PrefabIdentifier>().id;
+            attachableSaveData.Remove(id);
+        }
+
         public void Load()
         {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
@@ -128,9 +140,14 @@ namespace AutomationAge.Systems
         {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
             string id = gameObject.GetComponent<PrefabIdentifier>().id;
-            if(string.IsNullOrEmpty(id)) { queuedSave = true; return; } // We can't save yet, so queue that for later
-
             attachableSaveData[id] = new AttachableSaveData(this);
+        }
+
+        public IEnumerator DelayedSave()
+        {
+            if (!gameObject.TryGetComponent(out PrefabIdentifier identifier)) { yield break; }
+            yield return new WaitUntil(() => !string.IsNullOrEmpty(identifier.id));
+            Save();
         }
     }
 }
