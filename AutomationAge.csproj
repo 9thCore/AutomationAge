@@ -39,6 +39,6 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)&quot;&#xD;&#xA;copy /Y &quot;$(TargetPath)&quot; &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)&quot;&#xD;&#xA;robocopy /E &quot;D:\Mods\Subnautica\$(TargetName)\Language&quot; &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)\Language&quot;" />
+    <Exec Command="mkdir &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)&quot;&#xD;&#xA;robocopy /E &quot;D:\Mods\Subnautica\$(TargetName)\Language&quot; &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)\Language&quot;&#xD;&#xA;copy /Y &quot;$(TargetPath)&quot; &quot;F:\Games\SteamGames\steamapps\common\Subnautica\BepInEx\plugins\$(TargetName)&quot;" />
   </Target>
 </Project>
