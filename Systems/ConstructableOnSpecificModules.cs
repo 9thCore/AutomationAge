@@ -55,7 +55,13 @@ namespace AutomationAge.Systems
             if (!specialConstructables.ContainsKey(type)) { return; }
 
             GameObject module = hitCollider.transform.parent.gameObject;
-            if(!module.TryGetComponent(out Constructable constructable)) { return; }
+
+            if(!module.TryGetComponent(out Constructable constructable)) {
+                // Do not allow construction on non-constructables (this also includes base parts)
+                __result = false;
+                return;
+            }
+
             if(constructable.constructedAmount < 1f)
             {
                 // Do not allow construction if the module is not fully constructed
