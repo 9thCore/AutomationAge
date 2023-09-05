@@ -23,6 +23,9 @@ namespace AutomationAge.Systems
         public virtual void StartBehaviour() { }
         public virtual void StopBehaviour() { }
         public virtual void RemoveAttachable() { }
+        public virtual void SaveData(string id) { }
+        public virtual void LoadSaveData(string id) { }
+        public virtual void RemoveSaveData(string id) { }
 
         public void AttachToModule(GameObject module)
         {
@@ -123,6 +126,8 @@ namespace AutomationAge.Systems
         {
             if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
             {
+                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+                attachableSaveData.Remove(identifier.id);
                 RemoveSaveData(identifier.id);
                 return;
             }
@@ -130,15 +135,14 @@ namespace AutomationAge.Systems
             Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot remove saved data!!");
         }
 
-        public virtual void RemoveSaveData(string id)
-        {
-            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            attachableSaveData.Remove(id);
-        }
-
         public void Load()
         {
             if(gameObject.TryGetComponent(out PrefabIdentifier identifier)) {
+                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+                if (attachableSaveData.TryGetValue(identifier.id, out AttachableSaveData data))
+                {
+                    data.LoadAttachableData(this);
+                }
                 LoadSaveData(identifier.id);
                 return;
             }
@@ -146,30 +150,17 @@ namespace AutomationAge.Systems
             Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot load data!!");
         }
 
-        public virtual void LoadSaveData(string id)
-        {
-            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            if (attachableSaveData.TryGetValue(id, out AttachableSaveData data))
-            {
-                data.LoadAttachableData(this);
-            }
-        }
-
         public void Save()
         {
             string id = gameObject.GetComponent<PrefabIdentifier>().id; if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
             {
+                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
+                attachableSaveData[id] = new AttachableSaveData(this);
                 SaveData(identifier.id);
                 return;
             }
 
             Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot save data!!");
-        }
-
-        public virtual void SaveData(string id)
-        {
-            Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            attachableSaveData[id] = new AttachableSaveData(this);
         }
 
         public IEnumerator DelayedSave()
