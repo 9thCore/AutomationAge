@@ -12,7 +12,6 @@ namespace AutomationAge.Systems
     [HarmonyPatch]
     internal static class ConstructableOnSpecificModules
     {
-        [AssertLocalization]
         private const string deconstructAttachedMessage = "DeconstructAttachedError";
 
         private static Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
