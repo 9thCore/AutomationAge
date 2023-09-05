@@ -121,15 +121,34 @@ namespace AutomationAge.Systems
 
         public void Unsave()
         {
+            if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
+            {
+                RemoveSaveData(identifier.id);
+                return;
+            }
+
+            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot remove saved data!!");
+        }
+
+        public virtual void RemoveSaveData(string id)
+        {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            string id = gameObject.GetComponent<PrefabIdentifier>().id;
             attachableSaveData.Remove(id);
         }
 
         public void Load()
         {
+            if(gameObject.TryGetComponent(out PrefabIdentifier identifier)) {
+                LoadSaveData(identifier.id);
+                return;
+            }
+
+            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot load data!!");
+        }
+
+        public virtual void LoadSaveData(string id)
+        {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            string id = gameObject.GetComponent<PrefabIdentifier>().id;
             if (attachableSaveData.TryGetValue(id, out AttachableSaveData data))
             {
                 data.LoadAttachableData(this);
@@ -138,8 +157,18 @@ namespace AutomationAge.Systems
 
         public void Save()
         {
+            string id = gameObject.GetComponent<PrefabIdentifier>().id; if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
+            {
+                SaveData(identifier.id);
+                return;
+            }
+
+            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot save data!!");
+        }
+
+        public virtual void SaveData(string id)
+        {
             Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-            string id = gameObject.GetComponent<PrefabIdentifier>().id;
             attachableSaveData[id] = new AttachableSaveData(this);
         }
 
