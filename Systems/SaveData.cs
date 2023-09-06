@@ -14,7 +14,6 @@ namespace AutomationAge.Systems
     internal class SaveData : SaveDataCache
     {
         public Dictionary<string, AttachableSaveData> attachableSaveData = new Dictionary<string, AttachableSaveData>();
-        public Dictionary<string, RequesterSaveData> requesterSaveData = new Dictionary<string, RequesterSaveData>();
     }
 
     internal class AttachableSaveData
@@ -54,34 +53,6 @@ namespace AutomationAge.Systems
         }
     }
 
-    internal class RequesterSaveData
-    {
-        [JsonIgnore]
-        internal NetworkItemRequester requester;
-
-        public HashSet<TechType> items = new HashSet<TechType>();
-
-        [JsonConstructor]
-        public RequesterSaveData() { }
-
-        public RequesterSaveData(NetworkItemRequester requester)
-        {
-            SaveRequesterData(requester);
-        }
-
-        public void SaveRequesterData(NetworkItemRequester requester)
-        {
-            this.requester = requester;
-            items = requester.items;
-        }
-
-        public void LoadRequesterData(NetworkItemRequester requester)
-        {
-            this.requester = requester;
-            requester.items = items;
-        }
-    }
-
     internal static class SaveHandler
     {
         public static SaveData data;
@@ -103,12 +74,6 @@ namespace AutomationAge.Systems
                 {
                     saveData.Value.SaveAttachableData(saveData.Value.module);
                 }
-
-                foreach (KeyValuePair<string, RequesterSaveData> saveData in data.requesterSaveData)
-                {
-                    saveData.Value.SaveRequesterData(saveData.Value.requester);
-                }
-
             };
 
             data.OnFinishedSaving += (object sender, JsonFileEventArgs e) =>

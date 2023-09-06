@@ -1,4 +1,5 @@
 ﻿using Nautilus.Utility;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,28 +7,23 @@ using UWE;
 
 namespace AutomationAge.Systems.Network.Requesters
 {
-    internal class NetworkItemRequester : AttachableModule, IHandTarget
+    internal class NetworkItemRequester : AttachableModule
     {
         public const float RequestDelay = 1f;
-        public const string HoverText = "OpenStorage";
-        public const string FilterText = "ConfigureFilter";
-        public const string StorageLabel = "StorageLabel";
-        public const int Width = 2;
-        public const int Height = 2;
 
         private bool keepRequesting = false;
-        internal HashSet<TechType> items = new HashSet<TechType>();
         public ItemsContainer itemContainer { get; private set; }
 
         public override void OnAttach(GameObject module)
         {
             container.requesterAttached = true;
 
-            itemContainer = new ItemsContainer(Width, Height, transform, StorageLabel, null);
-            itemContainer.isAllowedToAdd += (Pickupable pickupable, bool verbose) => { return !items.Contains(pickupable.inventoryItem.techType); };
+            if(!gameObject.TryGetComponent(out StorageContainer storageContainer))
+            {
+                throw new InvalidOperationException("missing StorageContainer component");
+            }
 
-            itemContainer.onAddItem += item => items.Add(item.techType);
-            itemContainer.onRemoveItem += item => items.Remove(item.techType);
+            CoroutineHost.StartCoroutine(QueueAttach(storageContainer));
         }
 
         public override void StartBehaviour()
@@ -41,6 +37,18 @@ namespace AutomationAge.Systems.Network.Requesters
             keepRequesting = false;
         }
 
+        public IEnumerator QueueAttach(StorageContainer storageContainer)
+        {
+            yield return new WaitUntil(() => storageContainer.container != null);
+
+            itemContainer = storageContainer.container;
+            itemContainer.isAllowedToAdd += (Pickupable pickupable, bool verbose) =>
+            {
+                return !itemContainer.Contains(pickupable.GetTechType());
+            };
+        }
+
+        /*
         public override void SaveData(string id)
         {
             Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
@@ -61,6 +69,7 @@ namespace AutomationAge.Systems.Network.Requesters
                 data.LoadRequesterData(this);
             }
         }
+        */
 
         public override void RemoveAttachable()
         {
@@ -76,7 +85,7 @@ namespace AutomationAge.Systems.Network.Requesters
         {
             yield return new WaitForSeconds(RequestDelay);
             if (!keepRequesting) { yield break; }
-            if (!itemContainer.IsFull()) { Request(); }
+            if (!itemContainer.IsEmpty()) { Request(); }
 
             // Request stuff again
             QueueRequest();
@@ -88,49 +97,29 @@ namespace AutomationAge.Systems.Network.Requesters
             BaseData data = baseRoot.EnsureComponent<BaseData>();
 
             // Request one of each at the same time
-            foreach (TechType type in items)
+            foreach(KeyValuePair<TechType, ItemsContainer.ItemGroup> pair in itemContainer._items)
             {
+                List<InventoryItem> items = pair.Value.items;
+                InventoryItem item = items[0];
+
+                if (item == null) { continue; }
+                Pickupable pickupable = item.item;
+
+                // Don't bother searching if we can't put it in anyway
+                if (!container.HasRoomFor(pickupable)) { continue; }
+
+                Plugin.Logger.LogInfo("Has room");
+
                 foreach (NetworkContainer networkContainer in data.networkContainers)
                 {
-                    if (!networkContainer.ContainsItems() || !networkContainer.Contains(type)) { continue; }
-                    container.AddItem(networkContainer.RemoveItem(type));
+                    Plugin.Logger.LogInfo($"Trying container {networkContainer.name}");
+                    if (!networkContainer.ContainsItems() || !networkContainer.Contains(item)) { continue; }
+                    Plugin.Logger.LogInfo($"Container has item!");
+                    container.AddItem(pickupable);
+                    networkContainer.RemoveItem(pickupable);
                     break;
                 }
             }
-        }
-
-        public bool IsEmpty()
-        {
-            return itemContainer.IsEmpty();
-        }
-
-        void IHandTarget.OnHandHover(GUIHand hand)
-        {
-            if (enabled && gameObject.TryGetComponent(out Constructable constructable))
-            {
-                HandReticle.main.SetText(HandReticle.TextType.Hand, HoverText, translate: true, GameInput.Button.LeftHand);
-                HandReticle.main.SetText(HandReticle.TextType.HandSubscript, FilterText, translate: true);
-                HandReticle.main.SetIcon(HandReticle.IconType.Hand);
-            }
-        }
-
-        void IHandTarget.OnHandClick(GUIHand hand)
-        {
-            if (enabled && gameObject.TryGetComponent(out Constructable constructable))
-            {
-                Open();
-            }
-        }
-
-        public void Open()
-        {
-            PDA pda = Player.main.GetPDA();
-            Inventory.main.SetUsedStorage(itemContainer);
-            pda.Open(PDATab.Inventory, transform, OnClosePDA);
-        }
-
-        public void OnClosePDA(PDA pda)
-        {
         }
     }
 }

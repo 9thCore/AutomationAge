@@ -64,23 +64,34 @@ namespace AutomationAge.Systems.Network
             }
         }
 
-        public Pickupable RemoveItem(TechType techType)
+        public bool RemoveItem(Pickupable pickupable)
         {
             switch (type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.RemoveItem(techType);
+                    return storageContainer.container.RemoveItem(pickupable);
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
         }
 
-        public bool Contains(TechType techType)
+        public bool Contains(InventoryItem item)
         {
             switch (type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.Contains(techType);
+                    return storageContainer.container.Contains(item);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        public bool HasRoomFor(Pickupable pickupable)
+        {
+            switch (type)
+            {
+                case ContainerType.StorageContainer:
+                    return storageContainer.container.HasRoomFor(pickupable);
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
