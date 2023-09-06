@@ -63,6 +63,19 @@ namespace AutomationAge.Systems.Network.Requesters
 
         public void Request()
         {
+            GameObject baseRoot = transform.parent.gameObject;
+            BaseData data = baseRoot.EnsureComponent<BaseData>();
+
+            // Request one of each at the same time
+            foreach (TechType type in items)
+            {
+                foreach (NetworkContainer networkContainer in data.networkContainers)
+                {
+                    if (!networkContainer.ContainsItems() || !networkContainer.Contains(type)) { continue; }
+                    container.AddItem(networkContainer.RemoveItem(type));
+                    break;
+                }
+            }
         }
 
         public bool IsEmpty()
