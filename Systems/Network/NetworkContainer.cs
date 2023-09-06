@@ -1,12 +1,27 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace AutomationAge.Systems.Network
 {
     internal class NetworkContainer : MonoBehaviour
     {
+        public enum ContainerType
+        {
+            None,
+            StorageContainer
+        };
+        public ContainerType type = ContainerType.None;
+        public StorageContainer storageContainer;
+
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
         private bool broadcasting = false;
+
+        public void StorageContainer(StorageContainer container)
+        {
+            type = ContainerType.StorageContainer;
+            storageContainer = container;
+        }
 
         public void StartBroadcasting()
         {
@@ -15,7 +30,7 @@ namespace AutomationAge.Systems.Network
 
             GameObject baseRoot = transform.parent.gameObject;
             BaseData data = baseRoot.EnsureComponent<BaseData>();
-            data.BroadcastGameObject(gameObject);
+            data.networkContainers.Add(this);
         }
 
         public void StopBroadcasting()
@@ -25,12 +40,50 @@ namespace AutomationAge.Systems.Network
 
             GameObject baseRoot = transform.parent.gameObject;
             BaseData data = baseRoot.EnsureComponent<BaseData>();
-            data.StopBroadcastingGameObject(gameObject);
+            data.networkContainers.Remove(this);
         }
 
         public bool IsAnythingAttached()
         {
             return interfaceAttached || requesterAttached;
+        }
+
+        public bool ContainsItems()
+        {
+            return type == ContainerType.StorageContainer;
+        }
+
+        public InventoryItem AddItem(Pickupable pickupable)
+        {
+            switch(type)
+            {
+                case ContainerType.StorageContainer:
+                    return storageContainer.container.AddItem(pickupable);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        public Pickupable RemoveItem(TechType techType)
+        {
+            switch (type)
+            {
+                case ContainerType.StorageContainer:
+                    return storageContainer.container.RemoveItem(techType);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        public bool Contains(TechType techType)
+        {
+            switch (type)
+            {
+                case ContainerType.StorageContainer:
+                    return storageContainer.container.Contains(techType);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
         }
     }
 }

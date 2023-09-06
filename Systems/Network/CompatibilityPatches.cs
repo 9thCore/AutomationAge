@@ -11,7 +11,7 @@ namespace AutomationAge.Systems.Network
         [HarmonyPatch(typeof(StorageContainer), nameof(StorageContainer.Awake))]
         public static void StorageContainerPatch(StorageContainer __instance)
         {
-            __instance.gameObject.EnsureComponent<NetworkContainer>();
+            __instance.gameObject.EnsureComponent<NetworkContainer>().StorageContainer(__instance);
         }
 
         [HarmonyPostfix]
