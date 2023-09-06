@@ -16,7 +16,7 @@ namespace AutomationAge.Systems.Network.Requesters
         public const int Height = 2;
 
         private bool keepRequesting = false;
-        private HashSet<TechType> items = new HashSet<TechType>();
+        internal HashSet<TechType> items = new HashSet<TechType>();
         public ItemsContainer itemContainer { get; private set; }
 
         public override void OnAttach(GameObject module)
@@ -39,6 +39,27 @@ namespace AutomationAge.Systems.Network.Requesters
         public override void StopBehaviour()
         {
             keepRequesting = false;
+        }
+
+        public override void SaveData(string id)
+        {
+            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
+            requesterSaveData[id] = new RequesterSaveData(this);
+        }
+
+        public override void RemoveSaveData(string id)
+        {
+            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
+            requesterSaveData.Remove(id);
+        }
+
+        public override void LoadSaveData(string id)
+        {
+            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
+            if(requesterSaveData.TryGetValue(id, out RequesterSaveData data))
+            {
+                data.LoadRequesterData(this);
+            }
         }
 
         public override void RemoveAttachable()
