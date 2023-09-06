@@ -26,6 +26,7 @@ namespace AutomationAge.Systems
         public Vector3 attachedPos;
         public bool fullyConstructed;
 
+        [JsonConstructor]
         public AttachableSaveData() { }
 
         public AttachableSaveData(AttachableModule module)
@@ -58,7 +59,10 @@ namespace AutomationAge.Systems
         [JsonIgnore]
         internal NetworkItemRequester requester;
 
-        public List<TechType> items = new List<TechType>();
+        public HashSet<TechType> items = new HashSet<TechType>();
+
+        [JsonConstructor]
+        public RequesterSaveData() { }
 
         public RequesterSaveData(NetworkItemRequester requester)
         {
@@ -68,12 +72,13 @@ namespace AutomationAge.Systems
         public void SaveRequesterData(NetworkItemRequester requester)
         {
             this.requester = requester;
-            items = requester.items.ToList<TechType>();
+            items = requester.items;
         }
 
         public void LoadRequesterData(NetworkItemRequester requester)
         {
-            requester.items = items.ToHashSet<TechType>();
+            this.requester = requester;
+            requester.items = items;
         }
     }
 
