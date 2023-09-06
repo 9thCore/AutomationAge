@@ -3,6 +3,7 @@ using AutomationAge.Systems.Network.Requesters;
 using Nautilus.Handlers;
 using Nautilus.Json;
 using Nautilus.Json.Attributes;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace AutomationAge.Systems
 
     internal class AttachableSaveData
     {
+        [JsonIgnore]
         internal AttachableModule module;
 
         public string attachedID;
@@ -53,7 +55,9 @@ namespace AutomationAge.Systems
 
     internal class RequesterSaveData
     {
+        [JsonIgnore]
         internal NetworkItemRequester requester;
+
         public List<TechType> items = new List<TechType>();
 
         public RequesterSaveData(NetworkItemRequester requester)
