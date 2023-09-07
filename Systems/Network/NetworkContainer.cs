@@ -64,12 +64,12 @@ namespace AutomationAge.Systems.Network
             }
         }
 
-        public bool RemoveItem(Pickupable pickupable)
+        public Pickupable RemoveItem(TechType techType)
         {
             switch (type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.RemoveItem(pickupable);
+                    return storageContainer.container.RemoveItem(techType);
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
@@ -80,7 +80,7 @@ namespace AutomationAge.Systems.Network
             switch (type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.Contains(item);
+                    return storageContainer.container.Contains(item.techType);
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
@@ -92,6 +92,28 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.HasRoomFor(pickupable);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        public bool AllowedToAdd(Pickupable pickupable)
+        {
+            switch (type)
+            {
+                case ContainerType.StorageContainer:
+                    return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        public bool AllowedToRemove(Pickupable pickupable)
+        {
+            switch (type)
+            {
+                case ContainerType.StorageContainer:
+                    return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
