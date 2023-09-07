@@ -48,29 +48,6 @@ namespace AutomationAge.Systems.Network.Requesters
             };
         }
 
-        /*
-        public override void SaveData(string id)
-        {
-            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
-            requesterSaveData[id] = new RequesterSaveData(this);
-        }
-
-        public override void RemoveSaveData(string id)
-        {
-            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
-            requesterSaveData.Remove(id);
-        }
-
-        public override void LoadSaveData(string id)
-        {
-            Dictionary<string, RequesterSaveData> requesterSaveData = SaveHandler.data.requesterSaveData;
-            if(requesterSaveData.TryGetValue(id, out RequesterSaveData data))
-            {
-                data.LoadRequesterData(this);
-            }
-        }
-        */
-
         public override void RemoveAttachable()
         {
             container.requesterAttached = false;
