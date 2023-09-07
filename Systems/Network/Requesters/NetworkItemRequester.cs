@@ -1,5 +1,4 @@
 ﻿using Nautilus.Utility;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,40 +11,25 @@ namespace AutomationAge.Systems.Network.Requesters
         public const float RequestDelay = 1f;
 
         private bool keepRequesting = false;
-        public ItemsContainer itemContainer { get; private set; }
+        public FilterContainer filter = new FilterContainer();
 
         public override void OnAttach(GameObject module)
         {
             container.requesterAttached = true;
-
-            if(!gameObject.TryGetComponent(out StorageContainer storageContainer))
-            {
-                throw new InvalidOperationException("missing StorageContainer component");
-            }
-
-            CoroutineHost.StartCoroutine(QueueAttach(storageContainer));
+            filter.QueueAttach(gameObject);
         }
 
         public override void StartBehaviour()
         {
             keepRequesting = true;
             QueueRequest();
+
+
         }
 
         public override void StopBehaviour()
         {
             keepRequesting = false;
-        }
-
-        public IEnumerator QueueAttach(StorageContainer storageContainer)
-        {
-            yield return new WaitUntil(() => storageContainer.container != null);
-
-            itemContainer = storageContainer.container;
-            itemContainer.isAllowedToAdd += (Pickupable pickupable, bool verbose) =>
-            {
-                return !itemContainer.Contains(pickupable.GetTechType());
-            };
         }
 
         public override void RemoveAttachable()
@@ -62,7 +46,7 @@ namespace AutomationAge.Systems.Network.Requesters
         {
             yield return new WaitForSeconds(RequestDelay);
             if (!keepRequesting) { yield break; }
-            if (!itemContainer.IsEmpty()) { Request(); }
+            if (!filter.container.IsEmpty()) { Request(); }
 
             // Request stuff again
             QueueRequest();
@@ -74,22 +58,22 @@ namespace AutomationAge.Systems.Network.Requesters
             BaseData data = baseRoot.EnsureComponent<BaseData>();
 
             // Request one of each at the same time
-            foreach(KeyValuePair<TechType, ItemsContainer.ItemGroup> pair in itemContainer._items)
+            foreach(InventoryItem item in filter.GetItems())
             {
-                List<InventoryItem> items = pair.Value.items;
-                InventoryItem item = items[0];
-
-                if (item == null) { continue; }
                 Pickupable pickupable = item.item;
 
                 // Don't bother searching if we can't put it in anyway
-                if (!container.HasRoomFor(pickupable)) { continue; }
+                if (!container.HasRoomFor(pickupable) || !container.AllowedToAdd(pickupable)) { continue; }
 
                 foreach (NetworkContainer networkContainer in data.networkContainers)
                 {
-                    if (!networkContainer.ContainsItems() || !networkContainer.Contains(item)) { continue; }
-                    container.AddItem(pickupable);
-                    networkContainer.RemoveItem(pickupable);
+                    if (networkContainer == container               // Don't request from itself
+                        || !networkContainer.ContainsItems()        // Don't request if the container is not an item container
+                        || !networkContainer.Contains(item)         // Don't request if the container does not contain this
+                        || !networkContainer.AllowedToRemove(pickupable)) { continue; }
+
+                    Pickupable removedPickupable = networkContainer.RemoveItem(pickupable.GetTechType());
+                    container.AddItem(removedPickupable);
                     break;
                 }
             }
