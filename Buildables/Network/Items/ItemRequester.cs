@@ -11,6 +11,7 @@ namespace AutomationAge.Buildables.Network.Items
 {
     internal static class ItemRequester
     {
+        public const string HoverText = "ConfigureFilter";
         public const string StorageRoot = "ItemRequesterRoot";
         public const string StorageRootClassID = "ItemRequesterFilter";
         public const int Width = 2;
@@ -39,8 +40,10 @@ namespace AutomationAge.Buildables.Network.Items
             ConstructableFlags constructableFlags = ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Base | ConstructableFlags.Wall;
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
-            PrefabUtils.AddStorageContainer(obj, StorageRoot, StorageRootClassID, Width, Height, true);
             MaterialUtils.ApplySNShaders(model);
+
+            StorageContainer container = PrefabUtils.AddStorageContainer(obj, StorageRoot, StorageRootClassID, Width, Height, true);
+            container.hoverText = HoverText;
 
             return obj;
         }
