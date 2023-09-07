@@ -23,8 +23,6 @@ namespace AutomationAge.Systems.Network.Requesters
         {
             keepRequesting = true;
             QueueRequest();
-
-
         }
 
         public override void StopBehaviour()
