@@ -108,13 +108,9 @@ namespace AutomationAge.Systems.Network.Requesters
                 // Don't bother searching if we can't put it in anyway
                 if (!container.HasRoomFor(pickupable)) { continue; }
 
-                Plugin.Logger.LogInfo("Has room");
-
                 foreach (NetworkContainer networkContainer in data.networkContainers)
                 {
-                    Plugin.Logger.LogInfo($"Trying container {networkContainer.name}");
                     if (!networkContainer.ContainsItems() || !networkContainer.Contains(item)) { continue; }
-                    Plugin.Logger.LogInfo($"Container has item!");
                     container.AddItem(pickupable);
                     networkContainer.RemoveItem(pickupable);
                     break;
