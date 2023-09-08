@@ -102,6 +102,9 @@ namespace AutomationAge.Systems
 
             Load();
 
+            // Race condition? Not sure, but seems to fix issues relating to not finding the attachment
+            yield return new WaitForEndOfFrame();
+
             Collider[] colliders = Physics.OverlapBox(attachedPos, SearchRadius);
 
             for (int i = 0; i < colliders.Length; i++)
