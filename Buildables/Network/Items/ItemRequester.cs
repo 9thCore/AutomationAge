@@ -17,7 +17,7 @@ namespace AutomationAge.Buildables.Network.Items
         public const int Width = 2;
         public const int Height = 2;
 
-        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("ItemRequester", "Item Requester", "When attached to a storage module, will request the set items from available interfaced containers.")
+        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("ItemRequester", "Item Requester", "When attached to a storage module, will request the set items from available interfaced containers. Consumes power for every search and request operation.")
             .WithIcon(SpriteManager.Get(TechType.Locker));
 
         public static void Register()
@@ -35,6 +35,7 @@ namespace AutomationAge.Buildables.Network.Items
             GameObject obj = Assets.GetGameObject("ItemRequester");
             GameObject model = obj.transform.Find("ItemRequesterModel").gameObject;
 
+            obj.AddComponent<PowerConsumer>();
             obj.AddComponent<NetworkItemRequester>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Base | ConstructableFlags.Wall;

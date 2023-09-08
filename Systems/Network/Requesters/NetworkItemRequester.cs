@@ -10,13 +10,21 @@ namespace AutomationAge.Systems.Network.Requesters
     {
         public const float RequestDelay = 1f;
 
+        // Power it takes to search inside the network for items
+        public const float SearchPowerConsumption = 0.5f;
+
+        // Power it takes to request from a container
+        public const float RequestPowerConsumption = 1f;
+
         private bool keepRequesting = false;
+        private PowerConsumer consumer;
         public FilterContainer filter = new FilterContainer();
 
         public override void OnAttach(GameObject module)
         {
             container.requesterAttached = true;
             filter.QueueAttach(gameObject);
+            consumer = gameObject.EnsureComponent<PowerConsumer>();
         }
 
         public override void StartBehaviour()
@@ -59,10 +67,16 @@ namespace AutomationAge.Systems.Network.Requesters
             // Request one of each at the same time
             foreach(InventoryItem item in filter.GetItems())
             {
+                // We do not have enough power to search and request, so stop looking to avoid running out
+                if (!consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }
+
                 Pickupable pickupable = item.item;
 
                 // Don't bother searching if we can't put it in anyway
                 if (!container.HasRoomFor(pickupable) || !container.AllowedToAdd(pickupable)) { continue; }
+
+                // We're looking in the network, so use power even if we don't request anything :)
+                consumer.ConsumePower(SearchPowerConsumption, out float _);
 
                 foreach (NetworkContainer networkContainer in data.networkContainers)
                 {
@@ -73,6 +87,9 @@ namespace AutomationAge.Systems.Network.Requesters
 
                     Pickupable removedPickupable = networkContainer.RemoveItem(pickupable.GetTechType());
                     container.AddItem(removedPickupable);
+
+                    // We requested from container, so consume more power
+                    consumer.ConsumePower(RequestPowerConsumption, out float _);
                     break;
                 }
             }
