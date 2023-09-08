@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UWE;
 
-namespace AutomationAge.Systems.Network.Requesters
+namespace AutomationAge.Systems.Network.Item
 {
     internal class NetworkItemRequester : AttachableModule
     {
@@ -65,7 +65,7 @@ namespace AutomationAge.Systems.Network.Requesters
             BaseData data = baseRoot.EnsureComponent<BaseData>();
 
             // Request one of each at the same time
-            foreach(InventoryItem item in filter.GetItems())
+            foreach (InventoryItem item in filter.GetItems())
             {
                 // We do not have enough power to search and request, so stop looking to avoid running out
                 if (!consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }

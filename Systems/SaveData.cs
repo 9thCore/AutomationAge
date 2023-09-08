@@ -1,11 +1,8 @@
-﻿using AutomationAge.Systems.Network;
-using AutomationAge.Systems.Network.Requesters;
-using Nautilus.Handlers;
+﻿using Nautilus.Handlers;
 using Nautilus.Json;
 using Nautilus.Json.Attributes;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace AutomationAge.Systems

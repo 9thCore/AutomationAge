@@ -5,7 +5,7 @@ using Nautilus.Utility;
 using Nautilus.Assets.Gadgets;
 using UnityEngine;
 using AutomationAge.Systems;
-using AutomationAge.Systems.Network.Requesters;
+using AutomationAge.Systems.Network.Item;
 
 namespace AutomationAge.Buildables.Network.Items
 {
