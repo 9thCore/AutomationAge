@@ -33,6 +33,7 @@ namespace AutomationAge.Systems.Network.Requesters
         public override void RemoveAttachable()
         {
             container.requesterAttached = false;
+            filter.OnDestroy();
         }
 
         public void QueueRequest()

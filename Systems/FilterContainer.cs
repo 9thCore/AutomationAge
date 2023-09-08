@@ -39,10 +39,18 @@ namespace AutomationAge.Systems
             yield return new WaitUntil(() => storageContainer.container != null);
 
             container = storageContainer.container;
-            container.isAllowedToAdd += (Pickupable pickupable, bool verbose) =>
-            {
-                return !container.Contains(pickupable.GetTechType());
-            };
+            container.isAllowedToAdd += AllowedToAdd;
+        }
+
+        public void OnDestroy()
+        {
+            if (container == null) { return; }
+            container.isAllowedToAdd -= AllowedToAdd;
+        }
+
+        public bool AllowedToAdd(Pickupable pickupable, bool verbose)
+        {
+            return !container.Contains(pickupable.GetTechType());
         }
     }
 }

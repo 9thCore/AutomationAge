@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace AutomationAge.Systems.Network
@@ -21,6 +22,9 @@ namespace AutomationAge.Systems.Network
         {
             type = ContainerType.StorageContainer;
             storageContainer = container;
+
+            storageContainer.container.onAddItem += UpdateItems;
+            storageContainer.container.onRemoveItem += UpdateItems;
         }
 
         public void StartBroadcasting()
@@ -28,9 +32,8 @@ namespace AutomationAge.Systems.Network
             if (broadcasting) { return; }
             broadcasting = true;
 
-            GameObject baseRoot = transform.parent.gameObject;
-            BaseData data = baseRoot.EnsureComponent<BaseData>();
-            data.networkContainers.Add(this);
+            GetBaseData().networkContainers.Add(this);
+            UpdateItems();
         }
 
         public void StopBroadcasting()
@@ -38,9 +41,8 @@ namespace AutomationAge.Systems.Network
             if (!broadcasting) { return; }
             broadcasting = false;
 
-            GameObject baseRoot = transform.parent.gameObject;
-            BaseData data = baseRoot.EnsureComponent<BaseData>();
-            data.networkContainers.Remove(this);
+            GetBaseData().networkContainers.Remove(this);
+            UpdateItems();
         }
 
         public bool IsAnythingAttached()
@@ -117,6 +119,48 @@ namespace AutomationAge.Systems.Network
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
+        }
+
+        public List<InventoryItem> GetItems()
+        {
+            switch(type)
+            {
+                case ContainerType.StorageContainer:
+                    List<InventoryItem> items = new List<InventoryItem>();
+                    foreach (InventoryItem item in storageContainer.container)
+                    {
+                        items.Add(item);
+                    }
+                    return items;
+                default:
+                    throw new ArgumentOutOfRangeException("type");
+            }
+        }
+
+        private BaseData GetBaseData()
+        {
+            GameObject baseRoot = transform.parent.gameObject;
+            return baseRoot.EnsureComponent<BaseData>();
+        }
+
+        // Required for onAddItem/onRemoveItem
+        // Although this is a good place to check if we're broadcasting
+        private void UpdateItems(InventoryItem _)
+        {
+            if (!broadcasting) { return; }
+            UpdateItems();
+        }
+
+        private void UpdateItems()
+        {
+            GetBaseData().UpdateItems();
+        }
+
+        public void OnDestroy()
+        {
+            if(storageContainer?.container == null) { return; }
+            storageContainer.container.onAddItem -= UpdateItems;
+            storageContainer.container.onRemoveItem -= UpdateItems;
         }
     }
 }
