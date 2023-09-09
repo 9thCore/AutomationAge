@@ -14,6 +14,7 @@ namespace AutomationAge.Systems.Network
         public ContainerType type = ContainerType.None;
         public StorageContainer storageContainer;
 
+        private BaseData data;
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
         private bool broadcasting = false;
@@ -23,8 +24,8 @@ namespace AutomationAge.Systems.Network
             type = ContainerType.StorageContainer;
             storageContainer = container;
 
-            storageContainer.container.onAddItem += UpdateItems;
-            storageContainer.container.onRemoveItem += UpdateItems;
+            GameObject baseRoot = transform.parent.gameObject;
+            data = baseRoot.EnsureComponent<BaseData>();
         }
 
         public void StartBroadcasting()
@@ -32,8 +33,7 @@ namespace AutomationAge.Systems.Network
             if (broadcasting) { return; }
             broadcasting = true;
 
-            GetBaseData().networkContainers.Add(this);
-            UpdateItems();
+            data.networkContainers.Add(this);
         }
 
         public void StopBroadcasting()
@@ -41,8 +41,7 @@ namespace AutomationAge.Systems.Network
             if (!broadcasting) { return; }
             broadcasting = false;
 
-            GetBaseData().networkContainers.Remove(this);
-            UpdateItems();
+            data.networkContainers.Remove(this);
         }
 
         public bool IsAnythingAttached()
@@ -135,32 +134,6 @@ namespace AutomationAge.Systems.Network
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
-        }
-
-        private BaseData GetBaseData()
-        {
-            GameObject baseRoot = transform.parent.gameObject;
-            return baseRoot.EnsureComponent<BaseData>();
-        }
-
-        // Required for onAddItem/onRemoveItem
-        // Although this is a good place to check if we're broadcasting
-        private void UpdateItems(InventoryItem _)
-        {
-            if (!broadcasting) { return; }
-            UpdateItems();
-        }
-
-        private void UpdateItems()
-        {
-            GetBaseData().UpdateItems();
-        }
-
-        public void OnDestroy()
-        {
-            if(storageContainer?.container == null) { return; }
-            storageContainer.container.onAddItem -= UpdateItems;
-            storageContainer.container.onRemoveItem -= UpdateItems;
         }
     }
 }
