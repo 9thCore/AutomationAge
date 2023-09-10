@@ -68,7 +68,7 @@ namespace AutomationAge.Systems.Network.Item
             foreach (InventoryItem item in filter.GetItems())
             {
                 // We do not have enough power to search and request, so stop looking to avoid running out
-                if (!consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }
+                if (GameModeUtils.RequiresPower() && !consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }
 
                 Pickupable pickupable = item.item;
 
