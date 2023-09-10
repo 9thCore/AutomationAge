@@ -13,7 +13,8 @@ namespace AutomationAge.Systems
         public enum SpecialModule
         {
             None,
-            NuclearReactor
+            NuclearReactor,
+            BioReactor
         }
 
         // misnomer it actually searches in a box lol
@@ -64,6 +65,9 @@ namespace AutomationAge.Systems
             if (module.TryGetComponent(out BaseNuclearReactor _))
             {
                 specialModule = SpecialModule.NuclearReactor;
+            } else if (module.TryGetComponent(out BaseBioReactor _))
+            {
+                specialModule = SpecialModule.BioReactor;
             }
 
             CoroutineHost.StartCoroutine(DelayedSave());
@@ -132,6 +136,13 @@ namespace AutomationAge.Systems
                         if (go.TryGetComponent(out BaseNuclearReactorGeometry geometry))
                         {
                             parent = geometry.GetModule().gameObject;
+                        }
+                        break;
+                    case SpecialModule.BioReactor:
+                        GameObject go1 = parent.transform.parent.gameObject;
+                        if (go1.TryGetComponent(out BaseBioReactorGeometry geometry1))
+                        {
+                            parent = geometry1.GetModule().gameObject;
                         }
                         break;
                     default:

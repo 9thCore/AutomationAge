@@ -44,9 +44,11 @@ namespace AutomationAge.Systems
         public static GameObject attachedModule = null;
 
         // Special handling required for some things like nuclear reactors
-        public static bool IsSpecialModule(GameObject go, out BaseNuclearReactor reactor)
+        public static bool IsSpecialModule(GameObject go, out GameObject matchingObject, out BaseNuclearReactor reactor, out BaseBioReactor bioReactor)
         {
             reactor = null;
+            bioReactor = null;
+            matchingObject = null;
 
             GameObject obj = go;
             while(true)
@@ -54,6 +56,12 @@ namespace AutomationAge.Systems
                 if (obj.TryGetComponent(out BaseNuclearReactorGeometry geometry))
                 {
                     reactor = geometry.GetModule();
+                    matchingObject = reactor.gameObject;
+                    return true;
+                } else if (obj.TryGetComponent(out BaseBioReactorGeometry geometry1))
+                {
+                    bioReactor = geometry1.GetModule();
+                    matchingObject = bioReactor.gameObject;
                     return true;
                 }
 
@@ -77,9 +85,9 @@ namespace AutomationAge.Systems
 
             GameObject go = hitCollider.transform.parent.gameObject;
 
-            if (IsSpecialModule(go, out BaseNuclearReactor reactor)) {
-                attachedModule = reactor.gameObject;
-                __result = func(attachedModule);
+            if (IsSpecialModule(go, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _)) {
+                attachedModule = obj;
+                __result = func(obj);
                 return;
             }
 
@@ -137,9 +145,9 @@ namespace AutomationAge.Systems
         public static void DeconstructableDeconstructionAllowed(BaseDeconstructable __instance, ref bool __result, ref string reason)
         {
             GameObject go = null;
-            if (IsSpecialModule(__instance.gameObject, out BaseNuclearReactor reactor))
+            if (IsSpecialModule(__instance.gameObject, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _))
             {
-                if (reactor != null) { go = reactor.gameObject; }
+                go = obj;
             }
             if (go == null) { return; }
 

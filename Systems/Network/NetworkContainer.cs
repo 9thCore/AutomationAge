@@ -10,13 +10,15 @@ namespace AutomationAge.Systems.Network
         {
             None,
             StorageContainer,
-            NuclearReactor
+            NuclearReactor,
+            BioReactor
         };
 
         public ContainerType Type { get; private set; } = ContainerType.None;
 
         internal StorageContainer storageContainer;
         internal BaseNuclearReactor nuclearReactor;
+        internal BaseBioReactor bioReactor;
 
         private BaseData _data;
         private BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
@@ -35,6 +37,12 @@ namespace AutomationAge.Systems.Network
         {
             Type = ContainerType.NuclearReactor;
             nuclearReactor = reactor;
+        }
+
+        public void BioReactor(BaseBioReactor reactor)
+        {
+            Type = ContainerType.BioReactor;
+            bioReactor = reactor;
         }
 
         public void StartBroadcasting()
@@ -61,22 +69,25 @@ namespace AutomationAge.Systems.Network
         public bool ContainsItems()
         {
             return Type == ContainerType.StorageContainer
-                || Type == ContainerType.NuclearReactor;
+                || Type == ContainerType.NuclearReactor
+                || Type == ContainerType.BioReactor;
         }
 
         public InventoryItem AddItem(Pickupable pickupable)
         {
-            switch(Type)
+            InventoryItem item = pickupable.inventoryItem;
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.AddItem(pickupable);
                 case ContainerType.NuclearReactor:
-                    InventoryItem item = pickupable.inventoryItem;
                     if (nuclearReactor.equipment.GetFreeSlot(EquipmentType.NuclearReactor, out string slot))
                     {
                         nuclearReactor.equipment.AddItem(slot, item, forced: false);
                     }
                     return item;
+                case ContainerType.BioReactor:
+                    return bioReactor.container.AddItem(pickupable);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -92,7 +103,7 @@ namespace AutomationAge.Systems.Network
                     string slot = null;
                     foreach (KeyValuePair<string, InventoryItem> pair in nuclearReactor.equipment.equipment)
                     {
-                        if (pair.Value.techType == techType)
+                        if (pair.Value?.techType == techType)
                         {
                             slot = pair.Key;
                             break;
@@ -101,6 +112,8 @@ namespace AutomationAge.Systems.Network
 
                     if(slot == null) { return null; }
                     return nuclearReactor.equipment.RemoveItem(slot, true, false).item;
+                case ContainerType.BioReactor:
+                    return bioReactor.container.RemoveItem(techType);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -118,6 +131,8 @@ namespace AutomationAge.Systems.Network
                         if (pair.Value?.techType == item.techType) { return true; }
                     }
                     return false;
+                case ContainerType.BioReactor:
+                    return bioReactor.container.Contains(item.techType);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -131,6 +146,8 @@ namespace AutomationAge.Systems.Network
                     return storageContainer.container.HasRoomFor(pickupable);
                 case ContainerType.NuclearReactor:
                     return nuclearReactor.equipment.GetFreeSlot(EquipmentType.NuclearReactor, out string _);
+                case ContainerType.BioReactor:
+                    return bioReactor.container.HasRoomFor(pickupable);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -144,6 +161,8 @@ namespace AutomationAge.Systems.Network
                     return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
                 case ContainerType.NuclearReactor:
                     return nuclearReactor.IsAllowedToAdd(pickupable, false);
+                case ContainerType.BioReactor:
+                    return ((IItemsContainer)bioReactor.container).AllowedToAdd(pickupable, false);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -157,6 +176,8 @@ namespace AutomationAge.Systems.Network
                     return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
                 case ContainerType.NuclearReactor:
                     return nuclearReactor.IsAllowedToRemove(pickupable, false);
+                case ContainerType.BioReactor:
+                    return ((IItemsContainer)bioReactor.container).AllowedToRemove(pickupable, false);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -180,6 +201,12 @@ namespace AutomationAge.Systems.Network
                         {
                             items.Add(pair.Value);
                         }
+                    }
+                    return items;
+                case ContainerType.BioReactor:
+                    foreach (InventoryItem item in bioReactor.container)
+                    {
+                        items.Add(item);
                     }
                     return items;
                 default:

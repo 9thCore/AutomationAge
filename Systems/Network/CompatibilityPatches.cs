@@ -35,6 +35,21 @@ namespace AutomationAge.Systems.Network
         }
 
         [HarmonyPostfix]
+        [HarmonyPatch(typeof(ItemsContainer), new Type[] { typeof(int), typeof(int), typeof(Transform), typeof(string), typeof(FMODAsset) })]
+        [HarmonyPatch(MethodType.Constructor)]
+        public static void ItemsContainerPatch(ItemsContainer __instance)
+        {
+            GameObject go = __instance.tr.gameObject.transform.parent?.gameObject;
+            if (!go.TryGetComponent(out NetworkContainer _))
+            {
+                if (go.TryGetComponent(out BaseBioReactor reactor))
+                {
+                    go.AddComponent<NetworkContainer>().BioReactor(reactor);
+                }
+            }
+        }
+
+        [HarmonyPostfix]
         [HarmonyPatch(typeof(SubRoot), nameof(SubRoot.Awake))]
         public static void SubRootPatch(SubRoot __instance)
         {
