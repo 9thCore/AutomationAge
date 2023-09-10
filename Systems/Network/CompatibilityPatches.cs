@@ -20,7 +20,7 @@ namespace AutomationAge.Systems.Network
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(Equipment), new Type[] {typeof(GameObject), typeof(Transform)})]
+        [HarmonyPatch(typeof(Equipment), new Type[] { typeof(GameObject), typeof(Transform) })]
         [HarmonyPatch(MethodType.Constructor)]
         public static void EquipmentPatch(Equipment __instance)
         {
