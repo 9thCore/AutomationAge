@@ -30,7 +30,10 @@ namespace AutomationAge.Systems.Network.Item
         public override void StartBehaviour()
         {
             keepRequesting = true;
-            QueueRequest();
+
+            // Randomise request for each requester so they don't all run at the same time
+            // Don't bother with accurate ordering tbh
+            Invoke("QueueRequest", UnityEngine.Random.value);
         }
 
         public override void StopBehaviour()
