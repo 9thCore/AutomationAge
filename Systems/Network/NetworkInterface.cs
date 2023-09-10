@@ -13,7 +13,7 @@ namespace AutomationAge.Systems.Network
 
         public override void OnAttach(GameObject module)
         {
-            container.interfaceAttached = true;
+            Container.interfaceAttached = true;
             consumer = gameObject.EnsureComponent<PowerConsumer>();
         }
 
@@ -31,17 +31,17 @@ namespace AutomationAge.Systems.Network
 
         public override void StartBehaviour()
         {
-            container.StartBroadcasting();
+            Container.StartBroadcasting();
         }
 
         public override void StopBehaviour()
         {
-            container.StopBroadcasting();
+            Container.StopBroadcasting();
         }
 
         public override void RemoveAttachable()
         {
-            container.interfaceAttached = false;
+            Container.interfaceAttached = false;
         }
     }
 }

@@ -22,7 +22,7 @@ namespace AutomationAge.Systems.Network.Item
 
         public override void OnAttach(GameObject module)
         {
-            container.requesterAttached = true;
+            Container.requesterAttached = true;
             filter.QueueAttach(gameObject);
             consumer = gameObject.EnsureComponent<PowerConsumer>();
         }
@@ -40,7 +40,7 @@ namespace AutomationAge.Systems.Network.Item
 
         public override void RemoveAttachable()
         {
-            container.requesterAttached = false;
+            Container.requesterAttached = false;
             filter.OnDestroy();
         }
 
@@ -73,20 +73,20 @@ namespace AutomationAge.Systems.Network.Item
                 Pickupable pickupable = item.item;
 
                 // Don't bother searching if we can't put it in anyway
-                if (!container.HasRoomFor(pickupable) || !container.AllowedToAdd(pickupable)) { continue; }
+                if (!Container.HasRoomFor(pickupable) || !Container.AllowedToAdd(pickupable)) { continue; }
 
                 // We're looking in the network, so use power even if we don't request anything :)
                 consumer.ConsumePower(SearchPowerConsumption, out float _);
 
                 foreach (NetworkContainer networkContainer in data.networkContainers)
                 {
-                    if (networkContainer == container               // Don't request from itself
+                    if (networkContainer == Container               // Don't request from itself
                         || !networkContainer.ContainsItems()        // Don't request if the container is not an item container
                         || !networkContainer.Contains(item)         // Don't request if the container does not contain this
                         || !networkContainer.AllowedToRemove(pickupable)) { continue; }
 
                     Pickupable removedPickupable = networkContainer.RemoveItem(pickupable.GetTechType());
-                    container.AddItem(removedPickupable);
+                    Container.AddItem(removedPickupable);
 
                     // We requested from container, so consume more power
                     consumer.ConsumePower(RequestPowerConsumption, out float _);

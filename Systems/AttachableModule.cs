@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UWE;
 
@@ -12,7 +13,15 @@ namespace AutomationAge.Systems
         // misnomer it actually searches in a box lol
         private static readonly Vector3 SearchRadius = new Vector3(1f, 1f, 1f);
 
-        internal NetworkContainer container;
+        private NetworkContainer _container;
+        internal NetworkContainer Container {
+            get
+            {
+                if (_container == null) { Attach(); }
+                return _container;
+            }
+        }
+
         public string attachedID = null;
         public Vector3 attachedPos = Vector3.zero;
         public bool fullyConstructed = false;
@@ -41,7 +50,7 @@ namespace AutomationAge.Systems
 
             attachedID = identifier.id;
             attachedPos = module.transform.position;
-            container = module.EnsureComponent<NetworkContainer>();
+            _container = module.EnsureComponent<NetworkContainer>();
             OnAttach(module);
 
             CoroutineHost.StartCoroutine(DelayedSave());
@@ -49,19 +58,19 @@ namespace AutomationAge.Systems
 
         public void Start()
         {
-            if (container == null) { return; }
+            if (Container == null) { return; }
         }
 
         public void OnEnable()
         {
-            if (container == null) { return; }
+            if (_container == null) { return; }
             if (firstRun) { return; }
             StartBehaviour();
         }
 
         public void OnDisable()
         {
-            if (container == null) { return; }
+            if (_container == null) { return; }
             if (firstRun)
             {
                 firstRun = false;
@@ -82,28 +91,18 @@ namespace AutomationAge.Systems
             GameObject module = ConstructableOnSpecificModules.attachedModule;
             if (module == null)
             {
-                // Was not just constructed, so have to do some more trickery
-                firstRun = false;
-                CoroutineHost.StartCoroutine(Attach());
+                // If not, wait to attach lazily after
                 return;
             }
 
             AttachToModule(module);
         }
 
-        public IEnumerator Attach()
+        private void Attach()
         {
             // Constructed last session, so we don't have a reference to the attached module
             // Attempt to find module to re-attach to
-
-            // Wait until the prefab identifier is available
-            if (!gameObject.TryGetComponent(out PrefabIdentifier identifier1)) { yield break; }
-            yield return new WaitUntil(() => !string.IsNullOrEmpty(identifier1.id));
-
             Load();
-
-            // Race condition? Not sure, but seems to fix issues relating to not finding the attachment
-            yield return new WaitForEndOfFrame();
 
             Collider[] colliders = Physics.OverlapBox(attachedPos, SearchRadius);
 
@@ -115,9 +114,10 @@ namespace AutomationAge.Systems
 
                 if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
                 {
+                    firstRun = false;
                     AttachToModule(parent);
                     if(fullyConstructed) { StartBehaviour(); }
-                    yield break;
+                    return;
                 }
             }
 
