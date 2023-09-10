@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
-using ExhaustiveMatching;
 
 namespace AutomationAge.Systems.Network
 {
@@ -15,7 +15,9 @@ namespace AutomationAge.Systems.Network
 
         public StorageContainer storageContainer;
 
-        private BaseData data;
+        private BaseData _data;
+        private BaseData data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
+
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
         private bool broadcasting = false;
@@ -24,9 +26,6 @@ namespace AutomationAge.Systems.Network
         {
             Type = ContainerType.StorageContainer;
             storageContainer = container;
-
-            GameObject baseRoot = transform.parent.gameObject;
-            data = baseRoot.EnsureComponent<BaseData>();
         }
 
         public void StartBroadcasting()
@@ -61,9 +60,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.AddItem(pickupable);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -73,9 +71,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.RemoveItem(techType);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -85,9 +82,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.Contains(item.techType);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -97,9 +93,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.HasRoomFor(pickupable);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -109,9 +104,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -121,9 +115,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -138,9 +131,8 @@ namespace AutomationAge.Systems.Network
                         items.Add(item);
                     }
                     return items;
-                case ContainerType.None:
                 default:
-                    throw ExhaustiveMatch.Failed();
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }
