@@ -21,6 +21,7 @@ namespace AutomationAge.Systems
         public string attachedID;
         public Vector3 attachedPos;
         public bool fullyConstructed;
+        public AttachableModule.SpecialModule specialModule;
 
         [JsonConstructor]
         public AttachableSaveData() { }
@@ -35,6 +36,7 @@ namespace AutomationAge.Systems
             this.module = module;
             attachedID = module.attachedID;
             attachedPos = module.attachedPos;
+            specialModule = module.specialModule;
             if (module.TryGetComponent(out Constructable constructable))
             {
                 fullyConstructed = constructable.constructed;
@@ -47,6 +49,7 @@ namespace AutomationAge.Systems
             module.attachedID = attachedID;
             module.attachedPos = attachedPos;
             module.fullyConstructed = fullyConstructed;
+            module.specialModule = specialModule;
         }
     }
 

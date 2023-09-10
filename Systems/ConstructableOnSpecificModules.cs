@@ -43,19 +43,47 @@ namespace AutomationAge.Systems
 
         public static GameObject attachedModule = null;
 
+        // Special handling required for some things like nuclear reactors
+        public static bool IsSpecialModule(GameObject go, out BaseNuclearReactor reactor)
+        {
+            reactor = null;
+
+            GameObject obj = go;
+            while(true)
+            {
+                if (obj.TryGetComponent(out BaseNuclearReactorGeometry geometry))
+                {
+                    reactor = geometry.GetModule();
+                    return true;
+                }
+
+                if (obj.transform.parent == null) { break; }
+                obj = obj.transform.parent.gameObject;
+            }
+
+            return false;
+        }
+
         // Allow constructing on modules if they fit the specified criteria
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Builder), nameof(Builder.CheckAsSubModule))]
         public static void CheckAsSubModulePostfix(Collider hitCollider, ref bool __result)
         {
-            if (!__result) { return; }
+            if (hitCollider == null || hitCollider.transform.parent == null) { return; }
 
             TechType type = Builder.lastTechType;
             if (!specialConstructables.ContainsKey(type)) { return; }
+            Func<GameObject, bool> func = specialConstructables[type];
 
-            GameObject module = hitCollider.transform.parent.gameObject;
+            GameObject go = hitCollider.transform.parent.gameObject;
 
-            if(!module.TryGetComponent(out Constructable constructable)) {
+            if (IsSpecialModule(go, out BaseNuclearReactor reactor)) {
+                attachedModule = reactor.gameObject;
+                __result = func(attachedModule);
+                return;
+            }
+
+            if(!go.TryGetComponent(out Constructable constructable)) {
                 // Do not allow construction on non-constructables (this also includes base parts)
                 __result = false;
                 return;
@@ -68,16 +96,17 @@ namespace AutomationAge.Systems
                 return;
             }
 
-            attachedModule = module;
-            __result = specialConstructables[type](module);
+            attachedModule = go;
+            __result = func(go);
         }
 
         // Disallow deconstruction of module if it has something attached to it
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Constructable), nameof(Constructable.DeconstructionAllowed))]
-        public static bool DeconstructionAllowedPrefix(Constructable __instance, ref bool __result, ref string reason)
+        public static bool ConstructableDeconstructionAllowed(Constructable __instance, ref bool __result, ref string reason)
         {
             GameObject obj = __instance.gameObject;
+
             if (obj.TryGetComponent(out NetworkContainer container))
             {
                 __result = !container.IsAnythingAttached();
@@ -94,12 +123,34 @@ namespace AutomationAge.Systems
         public static bool OnHoverPrefix(Constructable constructable)
         {
             GameObject obj = constructable.gameObject;
+
             if (obj.TryGetComponent(out NetworkContainer container))
             {
                 return !container.IsAnythingAttached();
             }
 
             return true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(BaseDeconstructable), nameof(BaseDeconstructable.DeconstructionAllowed))]
+        public static void DeconstructableDeconstructionAllowed(BaseDeconstructable __instance, ref bool __result, ref string reason)
+        {
+            GameObject go = null;
+            if (IsSpecialModule(__instance.gameObject, out BaseNuclearReactor reactor))
+            {
+                if (reactor != null) { go = reactor.gameObject; }
+            }
+            if (go == null) { return; }
+
+            if (go.TryGetComponent(out NetworkContainer container))
+            {
+                __result = !container.IsAnythingAttached();
+                reason = Language.main.Get(deconstructAttachedMessage);
+                return;
+            }
+
+            return;
         }
     }
 }

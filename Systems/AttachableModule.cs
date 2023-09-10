@@ -10,6 +10,12 @@ namespace AutomationAge.Systems
 {
     public class AttachableModule : MonoBehaviour
     {
+        public enum SpecialModule
+        {
+            None,
+            NuclearReactor
+        }
+
         // misnomer it actually searches in a box lol
         private static readonly Vector3 SearchRadius = new Vector3(1f, 1f, 1f);
 
@@ -25,6 +31,7 @@ namespace AutomationAge.Systems
         public string attachedID = null;
         public Vector3 attachedPos = Vector3.zero;
         public bool fullyConstructed = false;
+        internal SpecialModule specialModule;
 
         private bool firstRun = true;
 
@@ -52,6 +59,12 @@ namespace AutomationAge.Systems
             attachedPos = module.transform.position;
             _container = module.EnsureComponent<NetworkContainer>();
             OnAttach(module);
+
+            // Stuff that require special attention, like nuclear reactors
+            if (module.TryGetComponent(out BaseNuclearReactor _))
+            {
+                specialModule = SpecialModule.NuclearReactor;
+            }
 
             CoroutineHost.StartCoroutine(DelayedSave());
         }
@@ -111,6 +124,19 @@ namespace AutomationAge.Systems
                 GameObject obj = colliders[i].gameObject;
                 GameObject parent = obj.transform.parent.gameObject;
                 if (parent == null) { continue; }
+
+                switch (specialModule)
+                {
+                    case SpecialModule.NuclearReactor:
+                        GameObject go = parent.transform.parent.gameObject;
+                        if (go.TryGetComponent(out BaseNuclearReactorGeometry geometry))
+                        {
+                            parent = geometry.GetModule().gameObject;
+                        }
+                        break;
+                    default:
+                        break;
+                }
 
                 if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
                 {

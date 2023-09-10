@@ -9,14 +9,25 @@ namespace AutomationAge.Systems.Network
         public enum ContainerType
         {
             None,
-            StorageContainer
+            StorageContainer,
+            Equipment
         };
+        public enum EquipmentSubtype
+        {
+            None,
+            NuclearReactor
+        };
+
         public ContainerType Type { get; private set; } = ContainerType.None;
+        public EquipmentSubtype SubType { get; private set; } = EquipmentSubtype.None;
 
         public StorageContainer storageContainer;
+        public BaseNuclearReactor nuclearReactor;
+        public Equipment equipment;
+        public EquipmentType equipmentType;
 
         private BaseData _data;
-        private BaseData data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
+        private BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
 
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
@@ -28,12 +39,21 @@ namespace AutomationAge.Systems.Network
             storageContainer = container;
         }
 
+        public void NuclearReactor(BaseNuclearReactor reactor)
+        {
+            Type = ContainerType.Equipment;
+            SubType = EquipmentSubtype.NuclearReactor;
+            nuclearReactor = reactor;
+            equipment = reactor.equipment;
+            equipmentType = EquipmentType.NuclearReactor;
+        }
+
         public void StartBroadcasting()
         {
             if (broadcasting) { return; }
             broadcasting = true;
 
-            data.networkContainers.Add(this);
+            Data.networkContainers.Add(this);
         }
 
         public void StopBroadcasting()
@@ -41,7 +61,7 @@ namespace AutomationAge.Systems.Network
             if (!broadcasting) { return; }
             broadcasting = false;
 
-            data.networkContainers.Remove(this);
+            Data.networkContainers.Remove(this);
         }
 
         public bool IsAnythingAttached()
@@ -51,7 +71,8 @@ namespace AutomationAge.Systems.Network
 
         public bool ContainsItems()
         {
-            return Type == ContainerType.StorageContainer;
+            return Type == ContainerType.StorageContainer
+                || Type == ContainerType.Equipment;
         }
 
         public InventoryItem AddItem(Pickupable pickupable)
@@ -60,6 +81,13 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.AddItem(pickupable);
+                case ContainerType.Equipment:
+                    InventoryItem item = pickupable.inventoryItem;
+                    if (equipment.GetFreeSlot(equipmentType, out string slot))
+                    {
+                        Plugin.Logger.LogInfo($"Adding to reactor {nuclearReactor.name}, slot {slot} | {equipment.AddItem(slot, item, forced: false)} | Item container is now {item.container.label}");
+                    }
+                    return item;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -71,6 +99,19 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.RemoveItem(techType);
+                case ContainerType.Equipment:
+                    string slot = null;
+                    foreach (KeyValuePair<string, InventoryItem> pair in equipment.equipment)
+                    {
+                        if (pair.Value.techType == techType)
+                        {
+                            slot = pair.Key;
+                            break;
+                        }
+                    }
+
+                    if(slot == null) { return null; }
+                    return equipment.RemoveItem(slot, true, false).item;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -82,6 +123,12 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.Contains(item.techType);
+                case ContainerType.Equipment:
+                    foreach (KeyValuePair<string, InventoryItem> pair in equipment.equipment)
+                    {
+                        if (pair.Value.techType == item.techType) { return true; }
+                    }
+                    return false;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -93,6 +140,8 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.HasRoomFor(pickupable);
+                case ContainerType.Equipment:
+                    return equipment.GetFreeSlot(equipmentType, out string _);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -104,6 +153,12 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
+                case ContainerType.Equipment:
+                    return SubType switch
+                    {
+                        EquipmentSubtype.NuclearReactor => nuclearReactor.IsAllowedToAdd(pickupable, false),
+                        _ => false
+                    };
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -115,6 +170,12 @@ namespace AutomationAge.Systems.Network
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
+                case ContainerType.Equipment:
+                    return SubType switch
+                    {
+                        EquipmentSubtype.NuclearReactor => nuclearReactor.IsAllowedToRemove(pickupable, false),
+                        _ => false
+                    };
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -122,13 +183,19 @@ namespace AutomationAge.Systems.Network
 
         public List<InventoryItem> GetItems()
         {
-            switch(Type)
+            List<InventoryItem> items = new List<InventoryItem>();
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
-                    List<InventoryItem> items = new List<InventoryItem>();
                     foreach (InventoryItem item in storageContainer.container)
                     {
                         items.Add(item);
+                    }
+                    return items;
+                case ContainerType.Equipment:
+                    foreach(KeyValuePair<string, InventoryItem> pair in equipment.equipment)
+                    {
+                        items.Add(pair.Value);
                     }
                     return items;
                 default:
