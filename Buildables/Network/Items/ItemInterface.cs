@@ -11,7 +11,7 @@ namespace AutomationAge.Buildables.Network.Items
 {
     internal static class ItemInterface
     {
-        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("ItemInterface", "Item Interface", "When attached to a storage module, will expose its contents which can be requested by Item Requesters. Consumes power idle.")
+        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("ItemInterface", "Item Interface", "When attached to a storage module, will expose its contents which can be requested by Item Requesters. Continually consumes power.")
             .WithIcon(SpriteManager.Get(TechType.Locker));
 
         public static void Register()
