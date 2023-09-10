@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using ExhaustiveMatching;
 
 namespace AutomationAge.Systems.Network
 {
@@ -11,7 +11,8 @@ namespace AutomationAge.Systems.Network
             None,
             StorageContainer
         };
-        public ContainerType type = ContainerType.None;
+        public ContainerType Type { get; private set; } = ContainerType.None;
+
         public StorageContainer storageContainer;
 
         private BaseData data;
@@ -21,7 +22,7 @@ namespace AutomationAge.Systems.Network
 
         public void StorageContainer(StorageContainer container)
         {
-            type = ContainerType.StorageContainer;
+            Type = ContainerType.StorageContainer;
             storageContainer = container;
 
             GameObject baseRoot = transform.parent.gameObject;
@@ -51,78 +52,84 @@ namespace AutomationAge.Systems.Network
 
         public bool ContainsItems()
         {
-            return type == ContainerType.StorageContainer;
+            return Type == ContainerType.StorageContainer;
         }
 
         public InventoryItem AddItem(Pickupable pickupable)
         {
-            switch(type)
+            switch(Type)
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.AddItem(pickupable);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public Pickupable RemoveItem(TechType techType)
         {
-            switch (type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.RemoveItem(techType);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public bool Contains(InventoryItem item)
         {
-            switch (type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.Contains(item.techType);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public bool HasRoomFor(Pickupable pickupable)
         {
-            switch (type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return storageContainer.container.HasRoomFor(pickupable);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public bool AllowedToAdd(Pickupable pickupable)
         {
-            switch (type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public bool AllowedToRemove(Pickupable pickupable)
         {
-            switch (type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
 
         public List<InventoryItem> GetItems()
         {
-            switch(type)
+            switch(Type)
             {
                 case ContainerType.StorageContainer:
                     List<InventoryItem> items = new List<InventoryItem>();
@@ -131,8 +138,9 @@ namespace AutomationAge.Systems.Network
                         items.Add(item);
                     }
                     return items;
+                case ContainerType.None:
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw ExhaustiveMatch.Failed();
             }
         }
     }
