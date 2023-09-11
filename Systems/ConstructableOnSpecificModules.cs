@@ -50,23 +50,22 @@ namespace AutomationAge.Systems
             bioReactor = null;
             matchingObject = null;
 
-            GameObject obj = go;
-            while(true)
+            Transform tr = go.transform;
+            while(tr.parent != null)
             {
-                if (obj.TryGetComponent(out BaseNuclearReactorGeometry geometry))
+                if (tr.gameObject.TryGetComponent(out BaseNuclearReactorGeometry geometry))
                 {
                     reactor = geometry.GetModule();
                     matchingObject = reactor.gameObject;
                     return true;
-                } else if (obj.TryGetComponent(out BaseBioReactorGeometry geometry1))
+                } else if (tr.gameObject.TryGetComponent(out BaseBioReactorGeometry geometry1))
                 {
                     bioReactor = geometry1.GetModule();
                     matchingObject = bioReactor.gameObject;
                     return true;
                 }
 
-                if (obj.transform.parent == null) { break; }
-                obj = obj.transform.parent.gameObject;
+                tr = tr.parent;
             }
 
             return false;
@@ -83,29 +82,36 @@ namespace AutomationAge.Systems
             if (!specialConstructables.ContainsKey(type)) { return; }
             Func<GameObject, bool> func = specialConstructables[type];
 
-            GameObject go = hitCollider.transform.parent.gameObject;
+            Transform tr = hitCollider.transform;
 
-            if (IsSpecialModule(go, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _)) {
+            if (IsSpecialModule(tr.gameObject, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _)) {
                 attachedModule = obj;
                 __result = func(obj);
                 return;
             }
 
-            if(!go.TryGetComponent(out Constructable constructable)) {
-                // Do not allow construction on non-constructables (this also includes base parts)
-                __result = false;
-                return;
-            }
-
-            if(constructable.constructedAmount < 1f)
+            while (tr != null)
             {
-                // Do not allow construction if the module is not fully constructed
-                __result = false;
+                if (!tr.gameObject.TryGetComponent(out Constructable constructable))
+                {
+                    // Do not allow construction on non-constructables (this also includes base parts)
+                    // It is possible we are in a 'colliders' GameObject though, so keep looking upwards
+                    __result = false;
+                    tr = tr.parent;
+                    continue;
+                }
+
+                if (constructable.constructedAmount < 1f)
+                {
+                    // Do not allow construction if the module is not fully constructed
+                    __result = false;
+                    return;
+                }
+
+                attachedModule = tr.gameObject;
+                __result = func(tr.gameObject);
                 return;
             }
-
-            attachedModule = go;
-            __result = func(go);
         }
 
         // Disallow deconstruction of module if it has something attached to it
