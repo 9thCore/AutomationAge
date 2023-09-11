@@ -25,7 +25,7 @@ namespace AutomationAge.Systems.Network
 
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
-        private bool broadcasting = false;
+        public bool broadcasting = false;
 
         public void StorageContainer(StorageContainer container)
         {
@@ -45,20 +45,42 @@ namespace AutomationAge.Systems.Network
             bioReactor = reactor;
         }
 
+        public void Start()
+        {
+            Data.AddContainer(this);
+
+            switch(Type)
+            {
+                case ContainerType.StorageContainer:
+                    storageContainer.container.onAddItem += OnAddItem;
+                    storageContainer.container.onRemoveItem += OnRemoveItem;
+                    break;
+                case ContainerType.NuclearReactor:
+                    nuclearReactor.equipment.onAddItem += OnAddItem;
+                    nuclearReactor.equipment.onRemoveItem += OnRemoveItem;
+                    break;
+                case ContainerType.BioReactor:
+                    bioReactor.container.onAddItem += OnAddItem;
+                    bioReactor.container.onRemoveItem += OnRemoveItem;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public void OnDestroy()
+        {
+            Data.RemoveContainer(this);
+        }
+
         public void StartBroadcasting()
         {
-            if (broadcasting) { return; }
             broadcasting = true;
-
-            Data.networkContainers.Add(this);
         }
 
         public void StopBroadcasting()
         {
-            if (!broadcasting) { return; }
             broadcasting = false;
-
-            Data.networkContainers.Remove(this);
         }
 
         public bool IsAnythingAttached()
@@ -71,6 +93,16 @@ namespace AutomationAge.Systems.Network
             return Type == ContainerType.StorageContainer
                 || Type == ContainerType.NuclearReactor
                 || Type == ContainerType.BioReactor;
+        }
+
+        public void OnAddItem(InventoryItem item)
+        {
+            Data.OnContainerAddItem(this, item);
+        }
+
+        public void OnRemoveItem(InventoryItem item)
+        {
+            Data.OnContainerRemoveItem(this, item);
         }
 
         public InventoryItem AddItem(Pickupable pickupable)

@@ -64,9 +64,6 @@ namespace AutomationAge.Systems.Network.Item
 
         public void Request()
         {
-            GameObject baseRoot = transform.parent.gameObject;
-            BaseData data = baseRoot.EnsureComponent<BaseData>();
-
             // Request one of each at the same time
             foreach (InventoryItem item in filter.GetItems())
             {
@@ -81,11 +78,12 @@ namespace AutomationAge.Systems.Network.Item
                 // We're looking in the network, so use power even if we don't request anything :)
                 consumer.ConsumePower(SearchPowerConsumption, out float _);
 
-                foreach (NetworkContainer networkContainer in data.networkContainers)
+                List<NetworkContainer> containers = Data.GetContainersContaining(pickupable.GetTechType());
+                if (containers == null) { continue; }
+
+                foreach (NetworkContainer networkContainer in containers)
                 {
                     if (networkContainer == Container               // Don't request from itself
-                        || !networkContainer.ContainsItems()        // Don't request if the container is not an item container
-                        || !networkContainer.Contains(item)         // Don't request if the container does not contain this
                         || !networkContainer.AllowedToRemove(pickupable)) { continue; }
 
                     Pickupable removedPickupable = networkContainer.RemoveItem(pickupable.GetTechType());

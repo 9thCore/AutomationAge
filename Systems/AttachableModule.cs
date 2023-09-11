@@ -34,6 +34,9 @@ namespace AutomationAge.Systems
         public bool fullyConstructed = false;
         internal SpecialModule specialModule;
 
+        private BaseData _data;
+        internal BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
+
         private bool firstRun = true;
 
         public virtual void OnAttach(GameObject module) { }
