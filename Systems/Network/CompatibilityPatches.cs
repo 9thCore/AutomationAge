@@ -16,7 +16,13 @@ namespace AutomationAge.Systems.Network
             if (__instance.TryGetComponent(out NetworkItemRequester _)
                 || __instance.TryGetComponent(out Planter _)) { return; }
 
-            __instance.gameObject.EnsureComponent<NetworkContainer>().StorageContainer(__instance);
+            NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();
+            container.StorageContainer(__instance);
+            
+            if (__instance.TryGetComponent(out FiltrationMachine _))
+            {
+                container.requesterAllowed = false;
+            }
         }
 
         [HarmonyPostfix]

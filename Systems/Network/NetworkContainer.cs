@@ -24,7 +24,9 @@ namespace AutomationAge.Systems.Network
         private BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
 
         public bool interfaceAttached = false;
+        public bool interfaceAllowed = true;
         public bool requesterAttached = false;
+        public bool requesterAllowed = true;
         public bool broadcasting = false;
 
         public void StorageContainer(StorageContainer container)
@@ -43,6 +45,16 @@ namespace AutomationAge.Systems.Network
         {
             Type = ContainerType.BioReactor;
             bioReactor = reactor;
+        }
+
+        public void AllowInterface(bool allowed)
+        {
+            interfaceAllowed = allowed;
+        }
+
+        public void AllowRequester(bool allowed)
+        {
+            requesterAllowed = allowed;
         }
 
         public void Start()

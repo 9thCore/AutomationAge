@@ -21,7 +21,7 @@ namespace AutomationAge.Systems
                 obj => {
                     if(obj.TryGetComponent(out NetworkContainer container))
                     {
-                        return !container.interfaceAttached;
+                        return !container.interfaceAttached && container.interfaceAllowed;
                     }
 
                     return false;
@@ -33,7 +33,7 @@ namespace AutomationAge.Systems
                 {
                     if(obj.TryGetComponent(out NetworkContainer container))
                     {
-                        return !container.requesterAttached;
+                        return !container.requesterAttached && container.requesterAllowed;
                     }
 
                     return false;
@@ -44,10 +44,8 @@ namespace AutomationAge.Systems
         public static GameObject attachedModule = null;
 
         // Special handling required for some things like nuclear reactors
-        public static bool IsSpecialModule(GameObject go, out GameObject matchingObject, out BaseNuclearReactor reactor, out BaseBioReactor bioReactor)
+        public static bool IsSpecialModule(GameObject go, out GameObject matchingObject)
         {
-            reactor = null;
-            bioReactor = null;
             matchingObject = null;
 
             Transform tr = go.transform;
@@ -55,13 +53,15 @@ namespace AutomationAge.Systems
             {
                 if (tr.gameObject.TryGetComponent(out BaseNuclearReactorGeometry geometry))
                 {
-                    reactor = geometry.GetModule();
-                    matchingObject = reactor.gameObject;
+                    matchingObject = geometry.GetModule().gameObject;
                     return true;
                 } else if (tr.gameObject.TryGetComponent(out BaseBioReactorGeometry geometry1))
                 {
-                    bioReactor = geometry1.GetModule();
-                    matchingObject = bioReactor.gameObject;
+                    matchingObject = geometry1.GetModule().gameObject;
+                    return true;
+                } else if (tr.gameObject.TryGetComponent(out BaseFiltrationMachineGeometry geometry2))
+                {
+                    matchingObject = geometry2.GetModule().gameObject;
                     return true;
                 }
 
@@ -84,7 +84,7 @@ namespace AutomationAge.Systems
 
             Transform tr = hitCollider.transform;
 
-            if (IsSpecialModule(tr.gameObject, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _)) {
+            if (IsSpecialModule(tr.gameObject, out GameObject obj)) {
                 attachedModule = obj;
                 __result = func(obj);
                 return;
@@ -151,7 +151,7 @@ namespace AutomationAge.Systems
         public static void DeconstructableDeconstructionAllowed(BaseDeconstructable __instance, ref bool __result, ref string reason)
         {
             GameObject go = null;
-            if (IsSpecialModule(__instance.gameObject, out GameObject obj, out BaseNuclearReactor _, out BaseBioReactor _))
+            if (IsSpecialModule(__instance.gameObject, out GameObject obj))
             {
                 go = obj;
             }
