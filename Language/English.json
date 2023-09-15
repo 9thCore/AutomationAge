@@ -1,3 +1,4 @@
 {
-  "ConfigureFilter": "Configure filter"
+  "ConfigureFilter": "Configure filter",
+  "CannotDeconstructHasRock": "Cannot deconstruct. Extruder contains an uncollected extruded rock"
 }

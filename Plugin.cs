@@ -1,11 +1,15 @@
 ﻿using AutomationAge.Buildables.Network.Items;
 using AutomationAge.Systems;
+using AutomationAge.Systems.Miner;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using Nautilus.Handlers;
+using System.Collections;
 using System.IO;
 using System.Reflection;
+using UnityEngine;
+using UWE;
 
 namespace AutomationAge
 {
@@ -34,6 +38,7 @@ namespace AutomationAge
         {
             ItemInterface.Register();
             ItemRequester.Register();
+            Miner.Register();
 
             LanguageHandler.RegisterLocalizationFolder("Language");
         }

@@ -1,4 +1,5 @@
-﻿using Nautilus.Handlers;
+﻿using AutomationAge.Systems.Miner;
+using Nautilus.Handlers;
 using Nautilus.Json;
 using Nautilus.Json.Attributes;
 using Newtonsoft.Json;
@@ -11,6 +12,7 @@ namespace AutomationAge.Systems
     internal class SaveData : SaveDataCache
     {
         public Dictionary<string, AttachableSaveData> attachableSaveData = new Dictionary<string, AttachableSaveData>();
+        public Dictionary<string, MinerSaveData> minerSaveData = new Dictionary<string, MinerSaveData>();
     }
 
     internal class AttachableSaveData
@@ -51,6 +53,18 @@ namespace AutomationAge.Systems
             module.fullyConstructed = fullyConstructed;
             module.specialModule = specialModule;
         }
+    }
+
+    internal class MinerSaveData
+    {
+        [JsonIgnore]
+        internal BaseMiner miner;
+
+        public int rockExtrusion = 0;
+        public TechType rockTechType = TechType.None;
+
+        [JsonConstructor]
+        public MinerSaveData() { }
     }
 
     internal static class SaveHandler
