@@ -1,10 +1,5 @@
-﻿using AutomationAge.Systems.Network;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using UnityEngine;
-using UWE;
 
 namespace AutomationAge.Systems
 {
@@ -17,35 +12,52 @@ namespace AutomationAge.Systems
             BioReactor
         }
 
-        // misnomer it actually searches in a box lol
-        private static readonly Vector3 SearchRadius = new Vector3(1f, 1f, 1f);
+        public static readonly Vector3 SearchDistance = new Vector3(1f, 1f, 1f);
 
-        private NetworkContainer _container;
-        internal NetworkContainer Container {
+        internal AttachableSaveData _saveData;
+        internal AttachableSaveData SaveData
+        {
             get
             {
-                if (_container == null) { Attach(); }
-                return _container;
+                if (_saveData == null)
+                {
+                    if (!Load())
+                    {
+                        _saveData = new AttachableSaveData();
+                        _saveData.attachedID = string.Empty;
+                        _saveData.attachedPos = Vector3.zero;
+                        _saveData.fullyConstructed = Constructable.constructed;
+
+                        Save();
+                    }
+                    _saveData.module = this;
+                }
+                return _saveData;
             }
         }
 
-        public string attachedID = null;
-        public Vector3 attachedPos = Vector3.zero;
-        public bool fullyConstructed = false;
-        internal SpecialModule specialModule;
+        internal Constructable _constructable;
+        internal Constructable Constructable => _constructable ??= gameObject.GetComponent<Constructable>();
 
-        private BaseData _data;
-        internal BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
-
-        private bool firstRun = true;
+        internal GameObject _moduleAttachedTo;
+        internal GameObject ModuleAttachedTo
+        {
+            get
+            {
+                if (_moduleAttachedTo == null)
+                {
+                    LateAttach();
+                }
+                return _moduleAttachedTo;
+            }
+        }
 
         public virtual void OnAttach(GameObject module) { }
-        public virtual void StartBehaviour() { }
-        public virtual void StopBehaviour() { }
         public virtual void RemoveAttachable() { }
-        public virtual void SaveData(string id) { }
-        public virtual void LoadSaveData(string id) { }
-        public virtual void RemoveSaveData(string id) { }
+        public virtual void PostLoad() { }
+        public virtual void OnSave(string id) { }
+        public virtual void OnLoad(string id) { }
+        public virtual void OnUnsave(string id) { }
 
         public void AttachToModule(GameObject module)
         {
@@ -59,50 +71,34 @@ namespace AutomationAge.Systems
                 throw new ArgumentException($"Attached module {module} does not have a PrefabIdentifier!");
             }
 
-            attachedID = identifier.id;
-            attachedPos = module.transform.position;
-            _container = module.EnsureComponent<NetworkContainer>();
-            OnAttach(module);
+            _moduleAttachedTo = module;
+
+            SaveData.attachedID = identifier.Id;
+            SaveData.attachedPos = module.transform.position;
 
             // Stuff that require special attention, like nuclear reactors
             if (module.TryGetComponent(out BaseNuclearReactor _))
             {
-                specialModule = SpecialModule.NuclearReactor;
-            } else if (module.TryGetComponent(out BaseBioReactor _))
+                SaveData.specialModule = SpecialModule.NuclearReactor;
+            }
+            else if (module.TryGetComponent(out BaseBioReactor _))
             {
-                specialModule = SpecialModule.BioReactor;
+                SaveData.specialModule = SpecialModule.BioReactor;
             }
 
-            CoroutineHost.StartCoroutine(DelayedSave());
-        }
-
-        public void Start()
-        {
-            if (Container == null) { return; }
-        }
-
-        public void OnEnable()
-        {
-            if (_container == null) { return; }
-            if (firstRun) { return; }
-            StartBehaviour();
-        }
-
-        public void OnDisable()
-        {
-            if (_container == null) { return; }
-            if (firstRun)
-            {
-                firstRun = false;
-                return;
-            }
-            StopBehaviour();
+            OnAttach(module);
         }
 
         public void OnDestroy()
         {
             RemoveAttachable();
             Unsave();
+        }
+
+        public void Start()
+        {
+            // Attach if we haven't already
+            if (ModuleAttachedTo == null) { return; }
         }
 
         public void Awake()
@@ -118,13 +114,11 @@ namespace AutomationAge.Systems
             AttachToModule(module);
         }
 
-        private void Attach()
+        public void LateAttach()
         {
             // Constructed last session, so we don't have a reference to the attached module
             // Attempt to find module to re-attach to
-            Load();
-
-            Collider[] colliders = Physics.OverlapBox(attachedPos, SearchRadius);
+            Collider[] colliders = Physics.OverlapBox(SaveData.attachedPos, SearchDistance);
 
             for (int i = 0; i < colliders.Length; i++)
             {
@@ -132,7 +126,7 @@ namespace AutomationAge.Systems
                 GameObject parent = obj.transform.parent.gameObject;
                 if (parent == null) { continue; }
 
-                switch (specialModule)
+                switch (SaveData.specialModule)
                 {
                     case SpecialModule.NuclearReactor:
                         GameObject go = parent.transform.parent.gameObject;
@@ -152,65 +146,38 @@ namespace AutomationAge.Systems
                         break;
                 }
 
-                if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.id == attachedID)
+                if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == SaveData.attachedID)
                 {
-                    firstRun = false;
                     AttachToModule(parent);
-                    if(fullyConstructed) { StartBehaviour(); }
+                    PostLoad();
                     return;
                 }
             }
 
-            Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {attachedID}. Out!");
+            Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {SaveData.attachedID}. Out!");
             Destroy(gameObject);
-        }
-
-        public void Unsave()
-        {
-            if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
-            {
-                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-                attachableSaveData.Remove(identifier.id);
-                RemoveSaveData(identifier.id);
-                return;
-            }
-
-            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot remove saved data!!");
-        }
-
-        public void Load()
-        {
-            if(gameObject.TryGetComponent(out PrefabIdentifier identifier)) {
-                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-                if (attachableSaveData.TryGetValue(identifier.id, out AttachableSaveData data))
-                {
-                    data.LoadAttachableData(this);
-                }
-                LoadSaveData(identifier.id);
-                return;
-            }
-
-            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot load data!!");
         }
 
         public void Save()
         {
-            string id = gameObject.GetComponent<PrefabIdentifier>().id; if (gameObject.TryGetComponent(out PrefabIdentifier identifier))
-            {
-                Dictionary<string, AttachableSaveData> attachableSaveData = SaveHandler.data.attachableSaveData;
-                attachableSaveData[id] = new AttachableSaveData(this);
-                SaveData(identifier.id);
-                return;
-            }
-
-            Plugin.Logger.LogError($"Attachable {gameObject.name} does not have a PrefabIdentifier?? Cannot save data!!");
+            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
+            SaveHandler.data.attachableSaveData[prefabIdentifier.Id] = SaveData;
+            OnSave(prefabIdentifier.Id);
         }
 
-        public IEnumerator DelayedSave()
+        public bool Load()
         {
-            if (!gameObject.TryGetComponent(out PrefabIdentifier identifier)) { yield break; }
-            yield return new WaitUntil(() => !string.IsNullOrEmpty(identifier.id));
-            Save();
+            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
+            bool res = SaveHandler.data.attachableSaveData.TryGetValue(prefabIdentifier.Id, out _saveData);
+            OnLoad(prefabIdentifier.Id);
+            return res;
+        }
+
+        public void Unsave()
+        {
+            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
+            SaveHandler.data.attachableSaveData.Remove(prefabIdentifier.Id);
+            OnUnsave(prefabIdentifier.Id);
         }
     }
 }

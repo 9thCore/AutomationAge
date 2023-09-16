@@ -1,24 +1,40 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UWE;
-using static CraftNode;
 
 namespace AutomationAge.Systems
 {
     internal class FilterContainer
     {
-        public ItemsContainer container { get; private set; }
-
-        public void QueueAttach(GameObject gameObject)
+        private ItemsContainer _container;
+        public ItemsContainer container
         {
-            if (!gameObject.TryGetComponent(out StorageContainer storageContainer))
+            get
+            {
+                if (_container == null)
+                {
+                    Attach();
+                }
+                return _container;
+            }
+        }
+
+        private GameObject obj;
+
+        public FilterContainer(GameObject go)
+        {
+            obj = go;
+        }
+
+        public void Attach()
+        {
+            if (!obj.TryGetComponent(out StorageContainer storageContainer))
             {
                 throw new InvalidOperationException("missing StorageContainer component");
             }
 
-            CoroutineHost.StartCoroutine(Attach(storageContainer));
+            _container = storageContainer.container;
+            _container.isAllowedToAdd += AllowedToAdd;
         }
 
         public List<InventoryItem> GetItems()
@@ -34,17 +50,9 @@ namespace AutomationAge.Systems
             return items;
         }
 
-        private IEnumerator Attach(StorageContainer storageContainer)
-        {
-            yield return new WaitUntil(() => storageContainer.container != null);
-
-            container = storageContainer.container;
-            container.isAllowedToAdd += AllowedToAdd;
-        }
-
         public void OnDestroy()
         {
-            if (container == null) { return; }
+            if (_container == null) { return; }
             container.isAllowedToAdd -= AllowedToAdd;
         }
 

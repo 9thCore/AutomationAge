@@ -27,32 +27,6 @@ namespace AutomationAge.Systems
 
         [JsonConstructor]
         public AttachableSaveData() { }
-
-        public AttachableSaveData(AttachableModule module)
-        {
-            SaveAttachableData(module);
-        }
-
-        public void SaveAttachableData(AttachableModule module)
-        {
-            this.module = module;
-            attachedID = module.attachedID;
-            attachedPos = module.attachedPos;
-            specialModule = module.specialModule;
-            if (module.TryGetComponent(out Constructable constructable))
-            {
-                fullyConstructed = constructable.constructed;
-            }
-        }
-
-        public void LoadAttachableData(AttachableModule module)
-        {
-            this.module = module;
-            module.attachedID = attachedID;
-            module.attachedPos = attachedPos;
-            module.fullyConstructed = fullyConstructed;
-            module.specialModule = specialModule;
-        }
     }
 
     internal class MinerSaveData
@@ -86,7 +60,8 @@ namespace AutomationAge.Systems
 
                 foreach (KeyValuePair<string, AttachableSaveData> saveData in data.attachableSaveData)
                 {
-                    saveData.Value.SaveAttachableData(saveData.Value.module);
+                    AttachableSaveData attachableData = saveData.Value;
+                    attachableData.fullyConstructed = attachableData.module.Constructable.constructed;
                 }
             };
 

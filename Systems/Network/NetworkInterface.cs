@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace AutomationAge.Systems.Network
 {
-    internal class NetworkInterface : AttachableModule
+    internal class NetworkInterface : AttachableNetworkModule
     {
         public const float IdlePowerConsumption = 1f;
         public const float IdlePowerConsumptionInterval = 1f;

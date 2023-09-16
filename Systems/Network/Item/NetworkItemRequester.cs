@@ -6,7 +6,7 @@ using UWE;
 
 namespace AutomationAge.Systems.Network.Item
 {
-    internal class NetworkItemRequester : AttachableModule
+    internal class NetworkItemRequester : AttachableNetworkModule
     {
         public const float RequestDelay = 1f;
 
@@ -18,12 +18,23 @@ namespace AutomationAge.Systems.Network.Item
 
         private bool keepRequesting = false;
         private PowerConsumer consumer;
-        public FilterContainer filter = new FilterContainer();
+
+        private FilterContainer _filter;
+        public FilterContainer Filter
+        {
+            get
+            {
+                if (_filter == null)
+                {
+                    _filter = new FilterContainer(gameObject);
+                }
+                return _filter;
+            }
+        }
 
         public override void OnAttach(GameObject module)
         {
             Container.requesterAttached = true;
-            filter.QueueAttach(gameObject);
             consumer = gameObject.EnsureComponent<PowerConsumer>();
         }
 
@@ -33,7 +44,7 @@ namespace AutomationAge.Systems.Network.Item
 
             // Randomise request for each requester so they don't all run at the same time
             // Don't bother with accurate ordering tbh
-            Invoke("QueueRequest", UnityEngine.Random.value);
+            Invoke("QueueRequest", Random.value);
         }
 
         public override void StopBehaviour()
@@ -44,7 +55,7 @@ namespace AutomationAge.Systems.Network.Item
         public override void RemoveAttachable()
         {
             Container.requesterAttached = false;
-            filter.OnDestroy();
+            Filter.OnDestroy();
         }
 
         public void QueueRequest()
@@ -56,7 +67,7 @@ namespace AutomationAge.Systems.Network.Item
         {
             yield return new WaitForSeconds(RequestDelay);
             if (!keepRequesting) { yield break; }
-            if (!filter.container.IsEmpty()) { Request(); }
+            if (!Filter.container.IsEmpty()) { Request(); }
 
             // Request stuff again
             QueueRequest();
@@ -65,7 +76,7 @@ namespace AutomationAge.Systems.Network.Item
         public void Request()
         {
             // Request one of each at the same time
-            foreach (InventoryItem item in filter.GetItems())
+            foreach (InventoryItem item in Filter.GetItems())
             {
                 // We do not have enough power to search and request, so stop looking to avoid running out
                 if (GameModeUtils.RequiresPower() && !consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }
