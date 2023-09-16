@@ -114,7 +114,7 @@ namespace AutomationAge.Systems.Miner
 
         public void Update()
         {
-            if (spawnedRock != null && rockSpawnTimer < 1f)
+            if (spawnedRock != null && rockSpawnTimer < RockSpawnTime)
             {
                 rockSpawnTimer += Time.deltaTime;
                 spawnedRock.transform.localPosition = Vector3.Lerp(RockSpawnStartPosition, RockSpawnPosition, rockSpawnTimer / RockSpawnTime);
