@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using static LootDistributionData;
 
 namespace AutomationAge.Systems.Miner
@@ -8,12 +9,13 @@ namespace AutomationAge.Systems.Miner
     // I was hoping for free crossmod compat but alas
     internal static class BiomeUtils
     {
-        public static readonly HashSet<TechType> resourceTechTypes = new HashSet<TechType>()
+        // TechType, copies (more = higher droprate)
+        public static readonly Dictionary<TechType, int> resourceTechTypes = new Dictionary<TechType, int>()
         {
-            TechType.LimestoneChunk,
-            TechType.SandstoneChunk,
-            TechType.ShaleChunk,
-            TechType.Nickel
+            { TechType.LimestoneChunk, 4 },
+            { TechType.SandstoneChunk, 2 },
+            { TechType.ShaleChunk, 2 },
+            { TechType.Nickel, 1 }
         };
 
         public static readonly Dictionary<string, List<TechType>> cachedResources = new Dictionary<string, List<TechType>>();
@@ -71,7 +73,9 @@ namespace AutomationAge.Systems.Miner
                     dstData.prefabs.ForEach(data =>
                     {
                         TechType type = CraftData.entClassTechTable.GetOrDefault(data.classId, TechType.None);
-                        if (resourceTechTypes.Contains(type) && !techs.Contains(type)) { techs.Add(type); }
+                        if (resourceTechTypes.TryGetValue(type, out int count) && !techs.Contains(type)) {
+                            techs.AddRange(Enumerable.Repeat(type, count));
+                        }
                     });
                 }
             }
@@ -79,10 +83,17 @@ namespace AutomationAge.Systems.Miner
             // Special case
             if (biomeType == "lostriver")
             {
-                techs.Add(TechType.Nickel);
+                if (resourceTechTypes.TryGetValue(TechType.Nickel, out int count))
+                {
+                    techs.AddRange(Enumerable.Repeat(TechType.Nickel, count));
+                }
             }
 
-            if (techs.Count == 0) { techs.Add(TechType.None); }
+            if (techs.Count == 0)
+            {
+                Plugin.Logger.LogWarning($"Biome {biome} (type {biomeType}) has no resources in its list! Adding TechType.None");
+                techs.Add(TechType.None);
+            }
 
             cachedResources.Add(biomeType, techs);
             return techs;
