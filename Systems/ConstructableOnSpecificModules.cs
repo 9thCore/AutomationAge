@@ -26,7 +26,7 @@ namespace AutomationAge.Systems
             }
         }
 
-        private const string DeconstructAttachedMessage = "DeconstructAttachedError";
+        public const string DeconstructAttachedMessage = "DeconstructAttachedError";
 
         private static Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
         {
@@ -118,7 +118,7 @@ namespace AutomationAge.Systems
         [HarmonyPatch(typeof(Builder), nameof(Builder.CheckAsSubModule))]
         public static void CheckAsSubModulePostfix(Collider hitCollider, ref bool __result)
         {
-            if (hitCollider == null || hitCollider.transform.parent == null) { return; }
+            if (hitCollider == null) { return; }
 
             TechType type = Builder.lastTechType;
             if (!specialConstructables.ContainsKey(type)) { return; }

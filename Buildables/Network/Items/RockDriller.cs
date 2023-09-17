@@ -34,6 +34,7 @@ namespace AutomationAge.Buildables.Network.Items
             GameObject obj = Assets.GetGameObject("RockDriller");
             GameObject model = obj.transform.Find("RockDrillerModel").gameObject;
             GameObject container = obj.transform.Find("Container").gameObject;
+            container.SetActive(false);
 
             obj.AddComponent<Driller>();
 

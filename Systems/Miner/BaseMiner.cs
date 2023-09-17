@@ -157,8 +157,20 @@ namespace AutomationAge.Systems.Miner
 
         public bool CanDeconstruct(out string reason)
         {
-            reason = Language.main.Get(HasRockDeconstructMessage);
-            return SaveData.rockTechType == TechType.None;
+            if (hasDrillAttachment)
+            {
+                reason = Language.main.Get(ConstructableOnSpecificModules.DeconstructAttachedMessage);
+                return false;
+            }
+
+            if (SaveData.rockTechType != TechType.None)
+            {
+                reason = Language.main.Get(HasRockDeconstructMessage);
+                return false;
+            }
+
+            reason = string.Empty;
+            return true;
         }
 
         public bool IsDeconstructionObstacle()

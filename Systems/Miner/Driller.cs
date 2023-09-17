@@ -15,6 +15,9 @@ namespace AutomationAge.Systems.Miner
 
         private BaseMiner miner;
 
+        private GameObject _container;
+        public GameObject Container => _container ??= transform.Find("Container").gameObject;
+
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
 
@@ -39,12 +42,16 @@ namespace AutomationAge.Systems.Miner
 
         public override void StartBehaviour()
         {
+            Container.SetActive(true);
+
             if (miner.spawnedPickupable == null && miner.spawnedRock == null) { return; }
             OnRockSpawn();
         }
 
         public override void StopBehaviour()
         {
+            Container.SetActive(false);
+
             if (coroutine == null) { return; }
             CoroutineHost.StopCoroutine(coroutine);
         }
