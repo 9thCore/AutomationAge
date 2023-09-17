@@ -45,12 +45,17 @@ namespace AutomationAge.Systems.Miner
         private string _biome;
         private string Biome => _biome ??= LargeWorld.main.GetBiome(transform.position);
 
+        public bool hasDrillAttachment = false;
+
         public PowerRelay powerRelay;
 
         private bool isRockSpawned = false;
-        private GameObject spawnedRock = null;
-        private Pickupable spawnedPickupable = null;
-        private float rockSpawnTimer = 0f;
+        public GameObject spawnedRock = null;
+        public Pickupable spawnedPickupable = null;
+        public float rockSpawnTimer = 0f;
+
+        public delegate void OnRockSpawned();
+        public event OnRockSpawned OnRockSpawn;
 
         public void Start()
         {
@@ -134,11 +139,19 @@ namespace AutomationAge.Systems.Miner
             {
                 spawnedPickupable.pickedUpEvent.AddHandler(this, PickedUp);
             }
+
+            OnRockSpawn?.Invoke();
         }
 
         public void PickedUp(Pickupable _)
         {
+            PickedUp();
+        }
+
+        public void PickedUp()
+        {
             spawnedRock = null;
+            spawnedPickupable?.pickedUpEvent.RemoveHandler(this, PickedUp);
             spawnedPickupable = null;
         }
 

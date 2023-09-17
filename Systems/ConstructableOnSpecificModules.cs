@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 using AutomationAge.Systems.Network;
+using AutomationAge.Systems.Miner;
 
 namespace AutomationAge.Systems
 {
@@ -12,7 +13,20 @@ namespace AutomationAge.Systems
     [HarmonyPatch]
     internal static class ConstructableOnSpecificModules
     {
-        private const string deconstructAttachedMessage = "DeconstructAttachedError";
+        public class SpecialRuleObject
+        {
+            public Vector3 position;
+            public Quaternion rotation;
+            public bool changed = false;
+
+            public SpecialRuleObject(Vector3 position, Quaternion rotation)
+            {
+                this.position = position;
+                this.rotation = rotation;
+            }
+        }
+
+        private const string DeconstructAttachedMessage = "DeconstructAttachedError";
 
         private static Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
         {
@@ -37,6 +51,34 @@ namespace AutomationAge.Systems
                     }
 
                     return false;
+                }
+            },
+            {
+                RockDriller.Info.TechType,
+                obj =>
+                {
+                    if(obj.TryGetComponent(out BaseMiner miner))
+                    {
+                        return !miner.hasDrillAttachment;
+                    }
+
+                    return false;
+                }
+            }
+        };
+
+        // Describes special construction rules, used for snapping a construction to another for instance
+        private static readonly Dictionary<TechType, Action<GameObject, SpecialRuleObject>> specialConstructionRules = new()
+        {
+            {
+                RockDriller.Info.TechType,
+                (go, obj) =>
+                {
+                    if (!go.TryGetComponent(out BaseMiner _)) { return; }
+
+                    obj.position = go.transform.position + go.transform.up * 2f;
+                    obj.rotation = go.transform.rotation;
+                    obj.changed = true;
                 }
             }
         };
@@ -114,6 +156,34 @@ namespace AutomationAge.Systems
             }
         }
 
+        // Snap specific modules to others
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Builder), nameof(Builder.SetPlaceOnSurface))]
+        public static void SetPlaceOnSurfacePostfix(ref RaycastHit hit, ref Vector3 position, ref Quaternion rotation)
+        {
+            if (!hit.collider.gameObject) { return; }
+            Transform tr = hit.collider.transform;
+
+            TechType type = Builder.lastTechType;
+            if (specialConstructionRules.TryGetValue(type, out Action<GameObject, SpecialRuleObject> action))
+            {
+                SpecialRuleObject obj = new SpecialRuleObject(position, rotation);
+
+                while (tr != null)
+                {
+                    action(tr.gameObject, obj);
+                    if (obj.changed)
+                    {
+                        position = obj.position;
+                        rotation = obj.rotation;
+                        return;
+                    }
+
+                    tr = tr.parent;
+                }
+            }
+        }
+
         // Disallow deconstruction of module if it has something attached to it
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Constructable), nameof(Constructable.DeconstructionAllowed))]
@@ -124,7 +194,7 @@ namespace AutomationAge.Systems
             if (obj.TryGetComponent(out NetworkContainer container))
             {
                 __result = !container.IsAnythingAttached();
-                reason = Language.main.Get(deconstructAttachedMessage);
+                reason = Language.main.Get(DeconstructAttachedMessage);
                 return false;
             }
 
@@ -160,7 +230,7 @@ namespace AutomationAge.Systems
             if (go.TryGetComponent(out NetworkContainer container))
             {
                 __result = !container.IsAnythingAttached();
-                reason = Language.main.Get(deconstructAttachedMessage);
+                reason = Language.main.Get(DeconstructAttachedMessage);
                 return;
             }
 
