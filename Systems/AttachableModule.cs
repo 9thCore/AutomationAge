@@ -52,12 +52,37 @@ namespace AutomationAge.Systems
             }
         }
 
+        private bool firstRun = true;
+
         public virtual void OnAttach(GameObject module) { }
         public virtual void RemoveAttachable() { }
-        public virtual void PostLoad() { }
         public virtual void OnSave(string id) { }
         public virtual void OnLoad(string id) { }
         public virtual void OnUnsave(string id) { }
+        public virtual void StartBehaviour() { }
+        public virtual void StopBehaviour() { }
+
+        public virtual void PostLoad()
+        {
+            firstRun = false;
+            if (SaveData.fullyConstructed) { StartBehaviour(); }
+        }
+
+        public void OnEnable()
+        {
+            if (firstRun) { return; }
+            StartBehaviour();
+        }
+
+        public void OnDisable()
+        {
+            if (firstRun)
+            {
+                firstRun = false;
+                return;
+            }
+            StopBehaviour();
+        }
 
         public void AttachToModule(GameObject module)
         {
