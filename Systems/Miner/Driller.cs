@@ -22,7 +22,7 @@ namespace AutomationAge.Systems.Miner
         public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
 
         private Animation _animation;
-        public Animation Animation => _animation ??= transform.GetComponentInChildren<Animation>();
+        public Animation Animation => _animation ??= transform.Find("RockDrillerModel").GetComponent<Animation>();
 
         private Coroutine coroutine;
 
@@ -43,6 +43,7 @@ namespace AutomationAge.Systems.Miner
         public override void StartBehaviour()
         {
             Container.SetActive(true);
+            Animation.Play();
 
             if (miner.spawnedPickupable == null && miner.spawnedRock == null) { return; }
             OnRockSpawn();
@@ -51,6 +52,7 @@ namespace AutomationAge.Systems.Miner
         public override void StopBehaviour()
         {
             Container.SetActive(false);
+            Animation.Stop();
 
             if (coroutine == null) { return; }
             CoroutineHost.StopCoroutine(coroutine);
@@ -87,16 +89,6 @@ namespace AutomationAge.Systems.Miner
             return true;
         }
 
-        public void PlayAnimation()
-        {
-            // Animation.Play();
-        }
-
-        public void StopAnimation()
-        {
-            // Animation.Stop();
-        }
-
         public void OnRockSpawn()
         {
             if (miner.spawnedPickupable)
@@ -116,7 +108,6 @@ namespace AutomationAge.Systems.Miner
 
         public IEnumerator PickUpDelayed(Pickupable pickupable)
         {
-            PlayAnimation();
             yield return new WaitForSeconds(HitTime);
 
             float waitTime;
@@ -129,13 +120,10 @@ namespace AutomationAge.Systems.Miner
         {
             Storage.container.AddItem(pickupable);
             miner?.PickedUp();
-            StopAnimation();
         }
 
         public IEnumerator BreakChunk(BreakableResource chunk)
         {
-            PlayAnimation();
-
             float waitTime;
             if (!GetWaitTime(out waitTime)) { yield return new WaitForSeconds(waitTime); }
 
