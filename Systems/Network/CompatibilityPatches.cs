@@ -50,7 +50,9 @@ namespace AutomationAge.Systems.Network
             {
                 if (go.TryGetComponent(out BaseBioReactor reactor))
                 {
-                    go.AddComponent<NetworkContainer>().BioReactor(reactor);
+                    NetworkContainer container = go.AddComponent<NetworkContainer>();
+                    container.BioReactor(reactor);
+                    container.AllowInterface(false);
                 }
             }
         }
