@@ -38,7 +38,7 @@ namespace AutomationAge.Buildables.Network.Items
 
             obj.AddComponent<Driller>();
 
-            ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable;
+            ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Rotatable;
             PrefabUtils.AddStorageContainer(container, StorageRoot, StorageRootClassID, Width, Height, true);
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);

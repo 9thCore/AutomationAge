@@ -5,6 +5,9 @@ using HarmonyLib;
 using UnityEngine;
 using AutomationAge.Systems.Network;
 using AutomationAge.Systems.Miner;
+using System.Diagnostics.CodeAnalysis;
+using UnityEngine.UI;
+using System.CodeDom;
 
 namespace AutomationAge.Systems
 {
@@ -77,7 +80,10 @@ namespace AutomationAge.Systems
                     if (!go.TryGetComponent(out BaseMiner _)) { return; }
 
                     obj.position = go.transform.position + go.transform.up * 2f;
-                    obj.rotation = go.transform.rotation;
+
+                    int snappedAdditiveRotation = (int)(Builder.additiveRotation / 2f) * 90;
+
+                    obj.rotation = go.transform.rotation * Quaternion.Euler(0f, snappedAdditiveRotation, 0f);
                     obj.changed = true;
                 }
             }
