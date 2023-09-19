@@ -21,9 +21,6 @@ namespace AutomationAge.Systems.Miner
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
 
-        private Animation _animation;
-        public Animation Animation => _animation ??= transform.Find("RockDrillerModel").GetComponent<Animation>();
-
         private Coroutine coroutine;
 
         public override void OnAttach(GameObject module)
@@ -43,7 +40,6 @@ namespace AutomationAge.Systems.Miner
         public override void StartBehaviour()
         {
             Container.SetActive(true);
-            Animation.Play();
 
             if (miner.spawnedPickupable == null && miner.spawnedRock == null) { return; }
             OnRockSpawn();
@@ -52,7 +48,6 @@ namespace AutomationAge.Systems.Miner
         public override void StopBehaviour()
         {
             Container.SetActive(false);
-            Animation.Stop();
 
             if (coroutine == null) { return; }
             CoroutineHost.StopCoroutine(coroutine);
@@ -84,6 +79,19 @@ namespace AutomationAge.Systems.Miner
             {
                 if (miner.powerRelay == null) { return false; }
                 return miner.powerRelay.GetPower() > MinePowerConsumption;
+            }
+
+            return true;
+        }
+
+        public bool ConsumePower()
+        {
+            if (!CanMine()) { return false; }
+
+            if (GameModeUtils.RequiresPower())
+            {
+                if (miner.powerRelay == null) { return false; }
+                miner.powerRelay.ConsumeEnergy(MinePowerConsumption, out _);
             }
 
             return true;
@@ -131,13 +139,8 @@ namespace AutomationAge.Systems.Miner
             {
                 yield return new WaitForSeconds(HitTime);
 
-                if (CanMine())
+                if (ConsumePower())
                 {
-                    if (GameModeUtils.RequiresPower() && miner.powerRelay != null)
-                    {
-                        miner.powerRelay.ConsumeEnergy(MinePowerConsumption, out _);
-                    }
-
                     chunk.HitResource();
                     FMODUWE.PlayOneShot(chunk.hitSound, chunk.transform.position);
                     if (chunk.hitFX != null)
@@ -148,7 +151,7 @@ namespace AutomationAge.Systems.Miner
             }
 
             yield return new WaitForSeconds(HitTime);
-            yield return new WaitUntil(CanMine);
+            yield return new WaitUntil(ConsumePower);
 
             chunk.broken = true;
             SendMessage("OnBreakResource", null, SendMessageOptions.DontRequireReceiver);
