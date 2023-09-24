@@ -15,6 +15,32 @@ namespace AutomationAge.Systems
         public Dictionary<string, MinerSaveData> minerSaveData = new Dictionary<string, MinerSaveData>();
     }
 
+    internal class CatchUpSaveData
+    {
+        public const int ActiveThreshold = 4;
+
+        [JsonIgnore]
+        public int lastActiveFrame = Time.frameCount;
+        [JsonIgnore]
+        public float lastActiveTime = Time.time;
+
+        public bool MustCatchUp()
+        {
+            if (lastActiveFrame < 0)
+            {
+                return false;
+            }
+
+            return Time.frameCount - lastActiveFrame > ActiveThreshold;
+        }
+
+        public void UpdateActiveTime()
+        {
+            lastActiveFrame = Time.frameCount;
+            lastActiveTime = Time.time;
+        }
+    }
+
     internal class AttachableSaveData
     {
         [JsonIgnore]
@@ -24,21 +50,17 @@ namespace AutomationAge.Systems
         public Vector3 attachedPos;
         public bool fullyConstructed;
         public AttachableModule.SpecialModule specialModule;
-
-        [JsonConstructor]
-        public AttachableSaveData() { }
     }
 
-    internal class MinerSaveData
+    internal class MinerSaveData : CatchUpSaveData
     {
         [JsonIgnore]
         internal BaseMiner miner;
 
+        public string rockID;
+
         public int rockExtrusion = 0;
         public TechType rockTechType = TechType.None;
-
-        [JsonConstructor]
-        public MinerSaveData() { }
     }
 
     internal static class SaveHandler

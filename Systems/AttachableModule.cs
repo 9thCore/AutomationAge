@@ -52,8 +52,6 @@ namespace AutomationAge.Systems
             }
         }
 
-        private bool firstRun = true;
-
         public virtual void OnAttach(GameObject module) { }
         public virtual void RemoveAttachable() { }
         public virtual void OnSave(string id) { }
@@ -64,23 +62,18 @@ namespace AutomationAge.Systems
 
         public virtual void PostLoad()
         {
-            firstRun = false;
             if (SaveData.fullyConstructed) { StartBehaviour(); }
         }
 
         public void OnEnable()
         {
-            if (firstRun) { return; }
+            if (_moduleAttachedTo == null) { return; }
             StartBehaviour();
         }
 
         public void OnDisable()
         {
-            if (firstRun)
-            {
-                firstRun = false;
-                return;
-            }
+            if (_moduleAttachedTo == null) { return; }
             StopBehaviour();
         }
 
@@ -117,7 +110,10 @@ namespace AutomationAge.Systems
         public void OnDestroy()
         {
             RemoveAttachable();
-            Unsave();
+            if (Constructable.constructedAmount <= 0f)
+            {
+                Unsave();
+            }
         }
 
         public void Start()
@@ -147,39 +143,43 @@ namespace AutomationAge.Systems
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                GameObject obj = colliders[i].gameObject;
-                GameObject parent = obj.transform.parent.gameObject;
-                if (parent == null) { continue; }
-
-                switch (SaveData.specialModule)
+                Transform tr = colliders[i].transform;
+                while(tr != null)
                 {
-                    case SpecialModule.NuclearReactor:
-                        GameObject go = parent.transform.parent.gameObject;
-                        if (go.TryGetComponent(out BaseNuclearReactorGeometry geometry))
-                        {
-                            parent = geometry.GetModule().gameObject;
-                        }
-                        break;
-                    case SpecialModule.BioReactor:
-                        GameObject go1 = parent.transform.parent.gameObject;
-                        if (go1.TryGetComponent(out BaseBioReactorGeometry geometry1))
-                        {
-                            parent = geometry1.GetModule().gameObject;
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                    GameObject obj = tr.gameObject;
 
-                if (parent.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == SaveData.attachedID)
-                {
-                    AttachToModule(parent);
-                    PostLoad();
-                    return;
+                    switch (SaveData.specialModule)
+                    {
+                        case SpecialModule.NuclearReactor:
+                            GameObject go = obj.transform.parent.gameObject;
+                            if (go.TryGetComponent(out BaseNuclearReactorGeometry geometry))
+                            {
+                                obj = geometry.GetModule().gameObject;
+                            }
+                            break;
+                        case SpecialModule.BioReactor:
+                            GameObject go1 = obj.transform.parent.gameObject;
+                            if (go1.TryGetComponent(out BaseBioReactorGeometry geometry1))
+                            {
+                                obj = geometry1.GetModule().gameObject;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if (obj.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == SaveData.attachedID)
+                    {
+                        AttachToModule(obj);
+                        PostLoad();
+                        return;
+                    }
+
+                    tr = tr.parent;
                 }
             }
 
-            Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to container id {SaveData.attachedID}. Out!");
+            Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to module id {SaveData.attachedID}. Out!");
             Destroy(gameObject);
         }
 
@@ -193,9 +193,14 @@ namespace AutomationAge.Systems
         public bool Load()
         {
             PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            bool res = SaveHandler.data.attachableSaveData.TryGetValue(prefabIdentifier.Id, out _saveData);
-            OnLoad(prefabIdentifier.Id);
-            return res;
+            if (SaveHandler.data.attachableSaveData.TryGetValue(prefabIdentifier.Id, out _saveData))
+            {
+                _saveData.module = this;
+                OnLoad(prefabIdentifier.Id);
+                return true;
+            }
+
+            return false;
         }
 
         public void Unsave()
