@@ -13,7 +13,18 @@ namespace AutomationAge.Systems.Miner
         public const float MinePowerConsumption = 2.5f;
         public readonly Quaternion HitFXRotation = Quaternion.Euler(new Vector3(270f, 0f, 0f));
 
-        private BaseMiner miner;
+        private BaseMiner _miner;
+        public BaseMiner Miner
+        {
+            get
+            {
+                if (_miner == null)
+                {
+                    _miner = ModuleAttachedTo.GetComponent<BaseMiner>();
+                }
+                return _miner;
+            }
+        }
 
         private GameObject _container;
         public GameObject Container => _container ??= transform.Find("Container").gameObject;
@@ -27,9 +38,8 @@ namespace AutomationAge.Systems.Miner
         {
             if (module.TryGetComponent(out BaseMiner miner))
             {
-                miner.drillAttachment = this;
-                this.miner = miner;
-                miner.OnRockSpawn += OnRockSpawn;
+                Miner.drillAttachment = this;
+                Miner.OnRockSpawn += OnRockSpawn;
             } else
             {
                 Plugin.Logger.LogWarning("Driller was built on something other than an extruder?? Out of here!!");
@@ -41,7 +51,7 @@ namespace AutomationAge.Systems.Miner
         {
             Container.SetActive(true);
 
-            if (miner.spawnedRock == null) { return; }
+            if (Miner.spawnedRock == null) { return; }
             OnRockSpawn();
         }
 
@@ -55,19 +65,19 @@ namespace AutomationAge.Systems.Miner
 
         public override void RemoveAttachable()
         {
-            miner.OnRockSpawn -= OnRockSpawn;
-            miner.drillAttachment = null;
+            Miner.OnRockSpawn -= OnRockSpawn;
+            Miner.drillAttachment = null;
         }
 
         public bool GetWaitTime(out float waitTime)
         {
-            if (miner.rockSpawnTimer >= BaseMiner.RockSpawnTime)
+            if (Miner.rockSpawnTimer >= BaseMiner.RockSpawnTime)
             {
                 waitTime = 0f;
                 return false;
             }
 
-            waitTime = BaseMiner.RockSpawnTime - miner.rockSpawnTimer;
+            waitTime = BaseMiner.RockSpawnTime - Miner.rockSpawnTimer;
             return true;
         }
 
@@ -77,8 +87,8 @@ namespace AutomationAge.Systems.Miner
 
             if (GameModeUtils.RequiresPower())
             {
-                if (miner.powerRelay == null) { return false; }
-                return miner.powerRelay.GetPower() > MinePowerConsumption;
+                if (Miner.powerRelay == null) { return false; }
+                return Miner.powerRelay.GetPower() > MinePowerConsumption;
             }
 
             return true;
@@ -90,8 +100,8 @@ namespace AutomationAge.Systems.Miner
 
             if (GameModeUtils.RequiresPower())
             {
-                if (miner.powerRelay == null) { return false; }
-                miner.powerRelay.ConsumeEnergy(MinePowerConsumption, out _);
+                if (Miner.powerRelay == null) { return false; }
+                Miner.powerRelay.ConsumeEnergy(MinePowerConsumption, out _);
             }
 
             return true;
@@ -99,17 +109,17 @@ namespace AutomationAge.Systems.Miner
 
         public void OnRockSpawn()
         {
-            if (miner.spawnedPickupable)
+            if (Miner.spawnedPickupable)
             {
-                coroutine = CoroutineHost.StartCoroutine(PickUpDelayed(miner.spawnedPickupable));
+                coroutine = CoroutineHost.StartCoroutine(PickUpDelayed(Miner.spawnedPickupable));
             } else
             {
-                if (miner.spawnedRock.TryGetComponent(out BreakableResource breakableResource))
+                if (Miner.spawnedRock.TryGetComponent(out BreakableResource breakableResource))
                 {
                     coroutine = CoroutineHost.StartCoroutine(BreakChunk(breakableResource));
                 } else
                 {
-                    Plugin.Logger.LogWarning($"No idea what to do with {miner.spawnedRock.name}! It's neither a breakable nor a pickupable");
+                    Plugin.Logger.LogWarning($"No idea what to do with {Miner.spawnedRock.name}! It's neither a breakable nor a pickupable");
                 }
             }
         }
@@ -132,9 +142,8 @@ namespace AutomationAge.Systems.Miner
                 return;
             }
 
-            pickupable.Pickup(false);
             Storage.container.AddItem(pickupable);
-            miner?.PickedUp();
+            Miner?.PickedUp();
         }
 
         public void CatchUp(GameObject rock)

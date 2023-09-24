@@ -79,12 +79,6 @@ namespace AutomationAge.Systems
             data.OnStartedSaving += (object sender, JsonFileEventArgs e) =>
             {
                 SaveData data = e.Instance as SaveData;
-
-                foreach (KeyValuePair<string, AttachableSaveData> saveData in data.attachableSaveData)
-                {
-                    AttachableSaveData attachableData = saveData.Value;
-                    attachableData.fullyConstructed = attachableData.module.Constructable.constructed;
-                }
             };
 
             data.OnFinishedSaving += (object sender, JsonFileEventArgs e) =>

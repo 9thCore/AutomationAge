@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace AutomationAge.Systems
 {
-    public class AttachableModule : MonoBehaviour
+    public class AttachableModule : MonoBehaviour, IConstructable
     {
         public enum SpecialModule
         {
@@ -116,12 +116,6 @@ namespace AutomationAge.Systems
             }
         }
 
-        public void Start()
-        {
-            // Attach if we haven't already
-            if (ModuleAttachedTo == null) { return; }
-        }
-
         public void Awake()
         {
             // If this was just constructed, then we can immediately attach
@@ -208,6 +202,22 @@ namespace AutomationAge.Systems
             PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
             SaveHandler.data.attachableSaveData.Remove(prefabIdentifier.Id);
             OnUnsave(prefabIdentifier.Id);
+        }
+
+        public void OnConstructedChanged(bool constructed)
+        {
+            SaveData.fullyConstructed = constructed;
+        }
+
+        public bool IsDeconstructionObstacle()
+        {
+            return true;
+        }
+
+        public bool CanDeconstruct(out string reason)
+        {
+            reason = string.Empty;
+            return true;
         }
     }
 }
