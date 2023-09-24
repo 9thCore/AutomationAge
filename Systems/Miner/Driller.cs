@@ -29,8 +29,13 @@ namespace AutomationAge.Systems.Miner
         private GameObject _container;
         public GameObject Container => _container ??= transform.Find("Container").gameObject;
 
+        /*
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
+        */
+
+        private StorageContainer _storage;
+        public StorageContainer Storage => _storage ??= gameObject.GetComponent<StorageContainer>();
 
         private Coroutine coroutine;
 
