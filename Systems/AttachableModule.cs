@@ -204,17 +204,17 @@ namespace AutomationAge.Systems
             OnUnsave(prefabIdentifier.Id);
         }
 
-        public void OnConstructedChanged(bool constructed)
+        public virtual void OnConstructedChanged(bool constructed)
         {
             SaveData.fullyConstructed = constructed;
         }
 
-        public bool IsDeconstructionObstacle()
+        public virtual bool IsDeconstructionObstacle()
         {
             return true;
         }
 
-        public bool CanDeconstruct(out string reason)
+        public virtual bool CanDeconstruct(out string reason)
         {
             reason = string.Empty;
             return true;

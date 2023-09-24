@@ -242,6 +242,16 @@ namespace AutomationAge.Systems.Miner
                 }
             }
         }
+        
+        /*
+         * Don't implement yet to avoid any big changes
+         * 
+        public override void OnConstructedChanged(bool constructed)
+        {
+            base.OnConstructedChanged(constructed);
+            Container.SetActive(constructed);
+        }
+        */
 
     }
 }
