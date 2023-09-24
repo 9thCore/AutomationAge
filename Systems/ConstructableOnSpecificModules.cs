@@ -31,7 +31,7 @@ namespace AutomationAge.Systems
 
         public const string DeconstructAttachedMessage = "DeconstructAttachedError";
 
-        private static Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
+        private static readonly Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
         {
             {
                 ItemInterface.Info.TechType,
@@ -62,7 +62,7 @@ namespace AutomationAge.Systems
                 {
                     if(obj.TryGetComponent(out BaseMiner miner))
                     {
-                        return !miner.hasDrillAttachment;
+                        return !miner.HasDrillAttachment();
                     }
 
                     return false;

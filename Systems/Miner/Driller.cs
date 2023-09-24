@@ -27,7 +27,7 @@ namespace AutomationAge.Systems.Miner
         {
             if (module.TryGetComponent(out BaseMiner miner))
             {
-                miner.hasDrillAttachment = true;
+                miner.drillAttachment = this;
                 this.miner = miner;
                 miner.OnRockSpawn += OnRockSpawn;
             } else
@@ -41,7 +41,7 @@ namespace AutomationAge.Systems.Miner
         {
             Container.SetActive(true);
 
-            if (miner.spawnedPickupable == null && miner.spawnedRock == null) { return; }
+            if (miner.spawnedRock == null) { return; }
             OnRockSpawn();
         }
 
@@ -56,7 +56,7 @@ namespace AutomationAge.Systems.Miner
         public override void RemoveAttachable()
         {
             miner.OnRockSpawn -= OnRockSpawn;
-            miner.hasDrillAttachment = false;
+            miner.drillAttachment = null;
         }
 
         public bool GetWaitTime(out float waitTime)
@@ -126,8 +126,29 @@ namespace AutomationAge.Systems.Miner
 
         public void PickUpResource(Pickupable pickupable)
         {
+            if (!Storage.container.HasRoomFor(pickupable))
+            {
+                pickupable.Drop(transform.position + transform.forward, default, false);
+                return;
+            }
+
+            pickupable.Pickup(false);
             Storage.container.AddItem(pickupable);
             miner?.PickedUp();
+        }
+
+        public void CatchUp(GameObject rock)
+        {
+            if (rock.TryGetComponent(out BreakableResource chunk))
+            {
+                CoroutineHost.StartCoroutine(GetChunkResources(chunk));
+            } else if (rock.TryGetComponent(out Pickupable pickupable))
+            {
+                PickUpResource(pickupable);
+            } else
+            {
+                Plugin.Logger.LogError($"Cannot catch up with {rock}, as it's neither a breakable resource nor a pickupable!");
+            }
         }
 
         public IEnumerator BreakChunk(BreakableResource chunk)
@@ -170,6 +191,11 @@ namespace AutomationAge.Systems.Miner
                 Utils.PlayOneShotPS(chunk.breakFX, chunk.transform.position, HitFXRotation);
             }
 
+            yield return GetChunkResources(chunk);
+        }
+
+        public IEnumerator GetChunkResources(BreakableResource chunk)
+        {
             List<AssetReferenceGameObject> gameObjects = new List<AssetReferenceGameObject>();
             for (int i = 0; i < chunk.numChances; i++)
             {
@@ -185,7 +211,7 @@ namespace AutomationAge.Systems.Miner
                 gameObjects.Add(chunk.defaultPrefabReference);
             }
 
-            foreach(AssetReferenceGameObject go in gameObjects)
+            foreach (AssetReferenceGameObject go in gameObjects)
             {
                 CoroutineTask<GameObject> result = AddressablesUtility.InstantiateAsync(go.RuntimeKey as string, null, chunk.transform.position + chunk.transform.up * chunk.verticalSpawnOffset);
                 yield return result;
@@ -200,7 +226,8 @@ namespace AutomationAge.Systems.Miner
                 if (result2.TryGetComponent(out Pickupable pickupable))
                 {
                     PickUpResource(pickupable);
-                } else
+                }
+                else
                 {
                     Plugin.Logger.LogError($"Could not pick up {result2.name}");
                 }

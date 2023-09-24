@@ -1,8 +1,4 @@
-﻿using Nautilus.Handlers;
-using Story;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 using UWE;
 
@@ -10,12 +6,14 @@ namespace AutomationAge.Systems.Miner
 {
     internal class BaseMiner : MonoBehaviour, IConstructable, IObstacle
     {
+        public static readonly Vector3 SearchDistance = new Vector3(1f, 1f, 1f);
         public const string HasRockDeconstructMessage = "CannotDeconstructHasRock";
         public const float ExtrusionInterval = 1f;
         public const float ExtrusionPowerConsumption = 2f;
         public const int RockExtrusionTarget = 30;
-        public static readonly Vector3 RockSpawnStartPosition = new Vector3(0f, 1.5f, 0f);
-        public static readonly Vector3 RockSpawnPosition = new Vector3(0f, 2f, 0f);
+        public const float RockSpawnHeight = 2f;
+        public static readonly Vector3 RockSpawnStartPosition = new Vector3(0f, RockSpawnHeight - 0.5f, 0f);
+        public static readonly Vector3 RockSpawnPosition = new Vector3(0f, RockSpawnHeight, 0f);
         public const float RockSpawnTime = 0.5f;
 
         private Constructable _constructable;
@@ -32,6 +30,7 @@ namespace AutomationAge.Systems.Miner
                     {
                         _saveData = new MinerSaveData();
                         _saveData.miner = this;
+                        _saveData.rockID = string.Empty;
                         _saveData.rockExtrusion = 0;
                         _saveData.rockTechType = TechType.None;
 
@@ -45,46 +44,41 @@ namespace AutomationAge.Systems.Miner
         private string _biome;
         private string Biome => _biome ??= LargeWorld.main.GetBiome(transform.position);
 
-        public bool hasDrillAttachment = false;
+        public Driller drillAttachment = null;
 
         public PowerRelay powerRelay;
 
-        private bool isRockSpawned = false;
         public GameObject spawnedRock = null;
         public Pickupable spawnedPickupable = null;
         public float rockSpawnTimer = 0f;
+        public float creationTime = Time.time;
 
         public delegate void OnRockSpawned();
         public event OnRockSpawned OnRockSpawn;
 
         public void Start()
         {
-            InvokeRepeating("UpdateExtrusion", 0f, ExtrusionInterval);
+            InvokeRepeating("UpdateExtrusion", Random.value, ExtrusionInterval);
         }
 
         public void OnDestroy()
         {
-            Unsave();
             spawnedPickupable?.pickedUpEvent.RemoveHandler(this, PickedUp);
+            if (constructable.constructedAmount <= 0f)
+            {
+                Unsave();
+            }
         }
 
         public void UpdateExtrusion()
         {
             if (!constructable.constructed) { return; }
+
             if (SaveData.rockTechType != TechType.None)
             {
-                if (!isRockSpawned)
+                if (spawnedRock == null)
                 {
-                    isRockSpawned = true;
-                    CoroutineHost.StartCoroutine(SpawnRock());
-                }
-                else
-                {
-                    // Check if destroyed or picked up
-                    if (spawnedRock == null)
-                    {
-                        SaveData.rockTechType = TechType.None;
-                    }
+                    SaveData.rockTechType = TechType.None;
                 }
                 return;
             }
@@ -101,36 +95,82 @@ namespace AutomationAge.Systems.Miner
                 if (SaveData.rockExtrusion < RockExtrusionTarget) { return; }
                 SaveData.rockExtrusion = 0;
 
-                TechType type = BiomeUtils.GetRandomBiomeLoot(Biome);
-
-                if (type != TechType.None)
-                {
-                    SaveData.rockTechType = type;
-                    isRockSpawned = true;
-
-                    CoroutineHost.StartCoroutine(SpawnRock());
-                }
-
+                SpawnRandomLoot();
                 return;
             }
 
             powerRelay = TechLight.GetNearestValidRelay(gameObject);
         }
 
+        public void SpawnRandomLoot()
+        {
+            TechType type = BiomeUtils.GetRandomBiomeLoot(Biome);
+
+            if (type != TechType.None)
+            {
+                SaveData.rockTechType = type;
+                CoroutineHost.StartCoroutine(SpawnRock());
+            }
+        }
+
+        public void CatchUp()
+        {
+            if (!SaveData.MustCatchUp()) { return; }
+
+            float difference = Time.time - SaveData.lastActiveTime;
+            int spawns = (int)(difference / (ExtrusionInterval * RockExtrusionTarget));
+
+            if (spawns < 1) { return; }
+
+            if (HasDrillAttachment())
+            {
+                CoroutineHost.StartCoroutine(CatchUpRockSpawns(spawns));
+            }
+            else
+            {
+                if (spawnedRock != null) { return; }
+                SpawnRandomLoot();
+            }
+        }
+
         public void Update()
         {
-            if (spawnedRock != null && rockSpawnTimer < RockSpawnTime)
+            CatchUp();
+            SaveData.UpdateActiveTime();
+
+            if (spawnedRock != null)
             {
                 rockSpawnTimer += Time.deltaTime;
                 spawnedRock.transform.localPosition = Vector3.Lerp(RockSpawnStartPosition, RockSpawnPosition, rockSpawnTimer / RockSpawnTime);
             }
         }
 
-        public IEnumerator SpawnRock()
+        public void FindSpawnedRock()
         {
-            TaskResult<GameObject> result = new TaskResult<GameObject>();
-            yield return CraftData.InstantiateFromPrefabAsync(SaveData.rockTechType, result, false);
-            spawnedRock = result.Get();
+            if (SaveData.rockTechType == TechType.None) { return; }
+
+            Collider[] colliders = Physics.OverlapBox(transform.position + transform.up * RockSpawnHeight, SearchDistance);
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Transform tr = colliders[i].transform;
+                while(tr != null)
+                {
+                    if (tr.gameObject.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == SaveData.rockID)
+                    {
+                        InitialiseRock(tr.gameObject);
+                        return;
+                    }
+                    tr = tr.parent;
+                }
+            }
+
+            Plugin.Logger.LogError($"Could not find spawned rock. Assuming no spawned rock");
+        }
+
+        public void InitialiseRock(GameObject obj)
+        {
+            spawnedRock = obj;
             spawnedRock.transform.SetParent(transform);
             spawnedRock.transform.localPosition = RockSpawnStartPosition;
             spawnedRock.transform.localRotation = Quaternion.identity;
@@ -140,7 +180,28 @@ namespace AutomationAge.Systems.Miner
                 spawnedPickupable.pickedUpEvent.AddHandler(this, PickedUp);
             }
 
+            SaveData.rockID = spawnedRock.GetComponent<PrefabIdentifier>().Id;
+
             OnRockSpawn?.Invoke();
+        }
+
+        public IEnumerator SpawnRock()
+        {
+            TaskResult<GameObject> result = new TaskResult<GameObject>();
+            yield return CraftData.InstantiateFromPrefabAsync(SaveData.rockTechType, result, false);
+            InitialiseRock(result.Get());
+        }
+
+        public IEnumerator CatchUpRockSpawns(int spawns)
+        {
+            for(int i = 0; i < spawns; i++)
+            {
+                if (!drillAttachment.CanMine()) { yield break; }
+
+                TaskResult<GameObject> result = new TaskResult<GameObject>();
+                yield return CraftData.InstantiateFromPrefabAsync(SaveData.rockTechType, result, false);
+                drillAttachment.CatchUp(result.Get());
+            }
         }
 
         public void PickedUp(Pickupable _)
@@ -153,11 +214,12 @@ namespace AutomationAge.Systems.Miner
             spawnedRock = null;
             spawnedPickupable?.pickedUpEvent.RemoveHandler(this, PickedUp);
             spawnedPickupable = null;
+            SaveData.rockID = string.Empty;
         }
 
         public bool CanDeconstruct(out string reason)
         {
-            if (hasDrillAttachment)
+            if (HasDrillAttachment())
             {
                 reason = Language.main.Get(ConstructableOnSpecificModules.DeconstructAttachedMessage);
                 return false;
@@ -183,16 +245,27 @@ namespace AutomationAge.Systems.Miner
 
         }
 
+        public bool HasDrillAttachment()
+        {
+            return drillAttachment != null;
+        }
+
         public void Save()
         {
             PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            SaveHandler.data.minerSaveData[prefabIdentifier.Id] = SaveData;
+            SaveHandler.data.minerSaveData[prefabIdentifier.Id] = _saveData;
         }
 
         public bool Load()
         {
             PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            return SaveHandler.data.minerSaveData.TryGetValue(prefabIdentifier.Id, out _saveData);
+            if (SaveHandler.data.minerSaveData.TryGetValue(prefabIdentifier.Id, out _saveData))
+            {
+                _saveData.miner = this;
+                FindSpawnedRock();
+                return true;
+            }
+            return false;
         }
 
         public void Unsave()
