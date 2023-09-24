@@ -34,15 +34,17 @@ namespace AutomationAge.Buildables.Network.Items
             GameObject obj = Assets.GetGameObject("RockDriller");
             GameObject model = obj.transform.Find("RockDrillerModel").gameObject;
             GameObject container = obj.transform.Find("Container").gameObject;
-            container.SetActive(false);
+            // container.SetActive(false);
 
             obj.AddComponent<Driller>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Rotatable;
-            PrefabUtils.AddStorageContainer(obj, StorageRoot, StorageRootClassID, Width, Height, true);
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
             MaterialUtils.ApplySNShaders(model);
+
+            StorageContainer storage = PrefabUtils.AddStorageContainer(container, StorageRoot, StorageRootClassID, Width, Height, true);
+            storage.prefabRoot = obj;
 
             return obj;
         }

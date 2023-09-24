@@ -14,28 +14,13 @@ namespace AutomationAge.Systems.Miner
         public readonly Quaternion HitFXRotation = Quaternion.Euler(new Vector3(270f, 0f, 0f));
 
         private BaseMiner _miner;
-        public BaseMiner Miner
-        {
-            get
-            {
-                if (_miner == null)
-                {
-                    _miner = ModuleAttachedTo.GetComponent<BaseMiner>();
-                }
-                return _miner;
-            }
-        }
+        public BaseMiner Miner => _miner ??= ModuleAttachedTo?.GetComponent<BaseMiner>();
 
         private GameObject _container;
         public GameObject Container => _container ??= transform.Find("Container").gameObject;
 
-        /*
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
-        */
-
-        private StorageContainer _storage;
-        public StorageContainer Storage => _storage ??= gameObject.GetComponent<StorageContainer>();
 
         private Coroutine coroutine;
 
@@ -54,22 +39,20 @@ namespace AutomationAge.Systems.Miner
 
         public override void StartBehaviour()
         {
-            Container.SetActive(true);
-
             if (Miner.spawnedRock == null) { return; }
             OnRockSpawn();
         }
 
         public override void StopBehaviour()
         {
-            Container.SetActive(false);
-
             if (coroutine == null) { return; }
             CoroutineHost.StopCoroutine(coroutine);
         }
 
         public override void RemoveAttachable()
         {
+            if (Miner == null) { return; }
+
             Miner.OnRockSpawn -= OnRockSpawn;
             Miner.drillAttachment = null;
         }

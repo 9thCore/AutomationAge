@@ -109,9 +109,9 @@ namespace AutomationAge.Systems
 
         public void OnDestroy()
         {
-            RemoveAttachable();
             if (Constructable.constructedAmount <= 0f)
             {
+                RemoveAttachable();
                 Unsave();
             }
         }
