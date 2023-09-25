@@ -37,11 +37,9 @@ namespace AutomationAge.Systems.Miner
 
         public void Start()
         {
-            /*
             GenericHandTarget target = gameObject.FindChild(RockDriller.HandTargetObject).GetComponent<GenericHandTarget>();
             target.onHandClick.AddListener(OnHandClick);
             target.onHandHover.AddListener(OnHandHover);
-            */
         }
 
         public override void StartBehaviour()
