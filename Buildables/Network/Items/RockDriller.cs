@@ -11,6 +11,11 @@ namespace AutomationAge.Buildables.Network.Items
 {
     internal class RockDriller
     {
+        public const string MainObject = "RockDriller";
+        public const string ModelObject = "RockDrillerModel";
+        public const string HandTargetObject = "ContainerHandTarget";
+        public const string StorageRootObject = "StorageRoot";
+
         public const string StorageRoot = "RockDrillerRoot";
         public const string StorageRootClassID = "RockDrillerStorage";
         public const int Width = 4;
@@ -31,19 +36,20 @@ namespace AutomationAge.Buildables.Network.Items
 
         public static GameObject GetGameObject()
         {
-            GameObject obj = Assets.GetGameObject("RockDriller");
-            GameObject model = obj.transform.Find("RockDrillerModel").gameObject;
-            GameObject container = obj.transform.Find("Container").gameObject;
-            // container.SetActive(false);
+            GameObject obj = Assets.GetGameObject(MainObject);
+            GameObject model = obj.transform.Find(ModelObject).gameObject;
+            GameObject storageRoot = obj.transform.Find(StorageRootObject).gameObject;
+            GameObject handTarget = obj.transform.Find(HandTargetObject).gameObject;
 
             obj.AddComponent<Driller>();
+            handTarget.AddComponent<GenericHandTarget>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Rotatable;
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
             MaterialUtils.ApplySNShaders(model);
 
-            StorageContainer storage = PrefabUtils.AddStorageContainer(container, StorageRoot, StorageRootClassID, Width, Height, true);
+            StorageContainer storage = PrefabUtils.AddStorageContainer(storageRoot, StorageRoot, StorageRootClassID, Width, Height, true);
             storage.prefabRoot = obj;
 
             return obj;

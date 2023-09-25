@@ -4,6 +4,7 @@ using UWE;
 using UnityEngine.AddressableAssets;
 using System.Collections.Generic;
 using Nautilus.Utility;
+using AutomationAge.Buildables.Network.Items;
 
 namespace AutomationAge.Systems.Miner
 {
@@ -16,11 +17,8 @@ namespace AutomationAge.Systems.Miner
         private BaseMiner _miner;
         public BaseMiner Miner => _miner ??= ModuleAttachedTo?.GetComponent<BaseMiner>();
 
-        private GameObject _container;
-        public GameObject Container => _container ??= transform.Find("Container").gameObject;
-
         private StorageContainer _storage;
-        public StorageContainer Storage => _storage ??= transform.Find("Container").gameObject.GetComponent<StorageContainer>();
+        public StorageContainer Storage => _storage ??= gameObject.FindChild(RockDriller.StorageRootObject).GetComponent<StorageContainer>();
 
         private Coroutine coroutine;
 
@@ -35,6 +33,15 @@ namespace AutomationAge.Systems.Miner
                 Plugin.Logger.LogWarning("Driller was built on something other than an extruder?? Out of here!!");
                 Destroy(gameObject);
             }
+        }
+
+        public void Start()
+        {
+            /*
+            GenericHandTarget target = gameObject.FindChild(RockDriller.HandTargetObject).GetComponent<GenericHandTarget>();
+            target.onHandClick.AddListener(OnHandClick);
+            target.onHandHover.AddListener(OnHandHover);
+            */
         }
 
         public override void StartBehaviour()
@@ -55,6 +62,18 @@ namespace AutomationAge.Systems.Miner
 
             Miner.OnRockSpawn -= OnRockSpawn;
             Miner.drillAttachment = null;
+        }
+
+        public void OnHandClick(HandTargetEventData _)
+        {
+            Storage.Open(transform);
+        }
+
+        public void OnHandHover(HandTargetEventData _)
+        {
+            HandReticle.main.SetText(HandReticle.TextType.Hand, Storage.hoverText, translate: true, GameInput.Button.LeftHand);
+            HandReticle.main.SetText(HandReticle.TextType.HandSubscript, Storage.IsEmpty() ? "Empty" : string.Empty, translate: true);
+            HandReticle.main.SetIcon(HandReticle.IconType.Hand);
         }
 
         public bool GetWaitTime(out float waitTime)
