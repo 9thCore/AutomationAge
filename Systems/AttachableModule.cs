@@ -116,6 +116,12 @@ namespace AutomationAge.Systems
             }
         }
 
+        public void Start()
+        {
+            // Force attach if we haven't already
+            if (ModuleAttachedTo == null) { return; }
+        }
+
         public void Awake()
         {
             // If this was just constructed, then we can immediately attach
