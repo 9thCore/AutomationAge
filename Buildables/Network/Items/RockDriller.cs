@@ -13,7 +13,6 @@ namespace AutomationAge.Buildables.Network.Items
     {
         public const string MainObject = "RockDriller";
         public const string ModelObject = "RockDrillerModel";
-        public const string HandTargetObject = "ContainerHandTarget";
         public const string StorageRootObject = "StorageRoot";
 
         public const string StorageRoot = "RockDrillerRoot";
@@ -38,10 +37,13 @@ namespace AutomationAge.Buildables.Network.Items
         {
             GameObject obj = Assets.GetGameObject(MainObject);
             GameObject model = obj.transform.Find(ModelObject).gameObject;
-            GameObject handTarget = obj.transform.Find(HandTargetObject).gameObject;
 
             obj.AddComponent<Driller>();
-            // handTarget.AddComponent<GenericHandTarget>();
+
+            foreach (UniqueIdentifier uid in obj.GetComponentsInChildren<UniqueIdentifier>())
+            {
+                uid.classId = Info.ClassID;
+            }
 
             ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Rotatable;
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);

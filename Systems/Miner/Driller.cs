@@ -35,15 +35,6 @@ namespace AutomationAge.Systems.Miner
             }
         }
 
-        public void Start()
-        {
-            /*
-            GenericHandTarget target = gameObject.FindChild(RockDriller.HandTargetObject).GetComponent<GenericHandTarget>();
-            target.onHandClick.AddListener(OnHandClick);
-            target.onHandHover.AddListener(OnHandHover);
-            */
-        }
-
         public override void StartBehaviour()
         {
             if (Miner.spawnedRock == null) { return; }
@@ -62,18 +53,6 @@ namespace AutomationAge.Systems.Miner
 
             Miner.OnRockSpawn -= OnRockSpawn;
             Miner.drillAttachment = null;
-        }
-
-        public void OnHandClick(HandTargetEventData _)
-        {
-            Storage.Open(transform);
-        }
-
-        public void OnHandHover(HandTargetEventData _)
-        {
-            HandReticle.main.SetText(HandReticle.TextType.Hand, Storage.hoverText, translate: true, GameInput.Button.LeftHand);
-            HandReticle.main.SetText(HandReticle.TextType.HandSubscript, Storage.IsEmpty() ? "Empty" : string.Empty, translate: true);
-            HandReticle.main.SetIcon(HandReticle.IconType.Hand);
         }
 
         public bool GetWaitTime(out float waitTime)
