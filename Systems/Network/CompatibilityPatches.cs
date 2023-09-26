@@ -2,6 +2,7 @@
 using HarmonyLib;
 using UnityEngine;
 using System;
+using AutomationAge.Systems.Miner;
 
 namespace AutomationAge.Systems.Network
 {
@@ -14,7 +15,8 @@ namespace AutomationAge.Systems.Network
         {
             // Blacklist certain objects from using the NetworkContainer
             if (__instance.TryGetComponent(out NetworkItemRequester _)
-                || __instance.TryGetComponent(out Planter _)) { return; }
+                || __instance.TryGetComponent(out Planter _)
+                || __instance.GetComponentInParent<Driller>() != null) { return; }
 
             NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();
             container.StorageContainer(__instance);
