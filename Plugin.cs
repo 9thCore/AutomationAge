@@ -1,4 +1,5 @@
-﻿using AutomationAge.Buildables.Network.Items;
+﻿using AutomationAge.Buildables.Items;
+using AutomationAge.Buildables.Items.Network;
 using AutomationAge.Systems;
 using BepInEx;
 using BepInEx.Logging;

@@ -1,5 +1,4 @@
-﻿using AutomationAge.Buildables.Network.Items;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
@@ -8,6 +7,8 @@ using AutomationAge.Systems.Miner;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine.UI;
 using System.CodeDom;
+using AutomationAge.Buildables.Items;
+using AutomationAge.Buildables.Items.Network;
 
 namespace AutomationAge.Systems
 {

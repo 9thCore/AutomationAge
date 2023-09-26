@@ -10,7 +10,7 @@ namespace AutomationAge.Systems.Miner
         public const string HasRockDeconstructMessage = "CannotDeconstructHasRock";
         public const float ExtrusionInterval = 1f;
         public const float ExtrusionPowerConsumption = 2f;
-        public const int RockExtrusionTarget = 30;
+        public const int RockExtrusionTarget = 1;
         public const float RockSpawnHeight = 2f;
         public static readonly Vector3 RockSpawnStartPosition = new Vector3(0f, RockSpawnHeight - 0.5f, 0f);
         public static readonly Vector3 RockSpawnPosition = new Vector3(0f, RockSpawnHeight, 0f);

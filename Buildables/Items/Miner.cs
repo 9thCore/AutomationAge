@@ -7,7 +7,7 @@ using UnityEngine;
 using Nautilus.Assets.Gadgets;
 using AutomationAge.Systems.Miner;
 
-namespace AutomationAge.Buildables.Network.Items
+namespace AutomationAge.Buildables.Items
 {
     internal class Miner
     {

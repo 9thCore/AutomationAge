@@ -4,7 +4,7 @@ using UWE;
 using UnityEngine.AddressableAssets;
 using System.Collections.Generic;
 using Nautilus.Utility;
-using AutomationAge.Buildables.Network.Items;
+using AutomationAge.Buildables.Items;
 
 namespace AutomationAge.Systems.Miner
 {
@@ -18,7 +18,7 @@ namespace AutomationAge.Systems.Miner
         public BaseMiner Miner => _miner ??= ModuleAttachedTo?.GetComponent<BaseMiner>();
 
         private StorageContainer _storage;
-        public StorageContainer Storage => _storage ??= gameObject.FindChild(RockDriller.StorageRootObject).GetComponent<StorageContainer>();
+        public StorageContainer Storage => _storage ??= Container.GetComponent<StorageContainer>();
 
         private GameObject _container;
         public GameObject Container => _container ??= gameObject.FindChild(RockDriller.ContainerObject);
