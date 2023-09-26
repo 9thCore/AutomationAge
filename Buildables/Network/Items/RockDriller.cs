@@ -38,19 +38,15 @@ namespace AutomationAge.Buildables.Network.Items
         {
             GameObject obj = Assets.GetGameObject(MainObject);
             GameObject model = obj.transform.Find(ModelObject).gameObject;
-            GameObject storageRoot = obj.transform.Find(StorageRootObject).gameObject;
             GameObject handTarget = obj.transform.Find(HandTargetObject).gameObject;
 
             obj.AddComponent<Driller>();
-            handTarget.AddComponent<GenericHandTarget>();
+            // handTarget.AddComponent<GenericHandTarget>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Rotatable;
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
             MaterialUtils.ApplySNShaders(model);
-
-            StorageContainer storage = PrefabUtils.AddStorageContainer(storageRoot, StorageRoot, StorageRootClassID, Width, Height, true);
-            storage.prefabRoot = obj;
 
             return obj;
         }
