@@ -20,6 +20,9 @@ namespace AutomationAge.Systems.Miner
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= gameObject.FindChild(RockDriller.StorageRootObject).GetComponent<StorageContainer>();
 
+        private GameObject _container;
+        public GameObject Container => _container ??= gameObject.FindChild(RockDriller.ContainerObject);
+
         private Coroutine coroutine;
 
         public override void OnAttach(GameObject module)
@@ -229,15 +232,11 @@ namespace AutomationAge.Systems.Miner
             }
         }
         
-        /*
-         * Don't implement yet to avoid any big changes
-         * 
         public override void OnConstructedChanged(bool constructed)
         {
             base.OnConstructedChanged(constructed);
             Container.SetActive(constructed);
         }
-        */
 
     }
 }

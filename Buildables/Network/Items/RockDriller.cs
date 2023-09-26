@@ -14,6 +14,7 @@ namespace AutomationAge.Buildables.Network.Items
         public const string MainObject = "RockDriller";
         public const string ModelObject = "RockDrillerModel";
         public const string StorageRootObject = "StorageRoot";
+        public const string ContainerObject = "Container";
 
         public const string StorageRoot = "RockDrillerRoot";
         public const string StorageRootClassID = "RockDrillerStorage";
