@@ -116,7 +116,7 @@ namespace AutomationAge.Systems
             }
         }
 
-        public void Start()
+        public virtual void Start()
         {
             // Force attach if we haven't already
             if (ModuleAttachedTo == null) { return; }

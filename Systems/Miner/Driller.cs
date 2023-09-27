@@ -38,6 +38,15 @@ namespace AutomationAge.Systems.Miner
             }
         }
 
+        public override void Start()
+        {
+            base.Start();
+            Storage.container.isAllowedToAdd += (_, _) =>
+            {
+                return false;
+            };
+        }
+
         public override void StartBehaviour()
         {
             if (Miner.spawnedRock == null) { return; }
@@ -123,15 +132,21 @@ namespace AutomationAge.Systems.Miner
             PickUpResource(pickupable);
         }
 
+        public bool CanAddResource(Pickupable pickupable)
+        {
+            return Storage.container.HasRoomFor(pickupable);
+        }
+
         public void PickUpResource(Pickupable pickupable)
         {
-            if (!Storage.container.HasRoomFor(pickupable))
+            if (!CanAddResource(pickupable))
             {
                 pickupable.Drop(transform.position + transform.forward, default, false);
                 return;
             }
 
-            Storage.container.AddItem(pickupable);
+            pickupable.Pickup(false);
+            Storage.container.UnsafeAdd(new InventoryItem(pickupable));
             Miner?.PickedUp();
         }
 
