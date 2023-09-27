@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using AutomationAge.Buildables.Items;
+using System;
+using System.Collections;
 using UnityEngine;
 using UWE;
 
@@ -58,7 +60,7 @@ namespace AutomationAge.Systems.Miner
 
         public void Start()
         {
-            InvokeRepeating("UpdateExtrusion", Random.value, ExtrusionInterval);
+            InvokeRepeating("UpdateExtrusion", UnityEngine.Random.value, ExtrusionInterval);
         }
 
         public void OnDestroy()
@@ -124,6 +126,9 @@ namespace AutomationAge.Systems.Miner
 
             if (HasDrillAttachment())
             {
+                // Limit spawns to driller capacity
+                spawns = System.Math.Min(spawns, RockDriller.Width * RockDriller.Height);
+
                 CoroutineHost.StartCoroutine(CatchUpRockSpawns(spawns));
             }
             else
@@ -198,9 +203,13 @@ namespace AutomationAge.Systems.Miner
             {
                 if (!drillAttachment.CanMine()) { yield break; }
 
-                TaskResult<GameObject> result = new TaskResult<GameObject>();
-                yield return CraftData.InstantiateFromPrefabAsync(SaveData.rockTechType, result, false);
-                drillAttachment.CatchUp(result.Get());
+                TechType type = BiomeUtils.GetRandomBiomeLoot(Biome);
+                if (type != TechType.None)
+                {
+                    TaskResult<GameObject> result = new TaskResult<GameObject>();
+                    yield return CraftData.InstantiateFromPrefabAsync(type, result, false);
+                    drillAttachment.CatchUp(result.Get());
+                }
             }
         }
 
