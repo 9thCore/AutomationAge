@@ -22,7 +22,7 @@ namespace AutomationAge.Buildables.Items
         public const int Height = 4;
 
         public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("RockDriller", "Rock Driller", "Attachment for the Rock Extruder. Automatically breaks down outcrops and picks up raw resources.")
-            .WithIcon(SpriteManager.Get(TechType.Drill));
+            .WithIcon(SpriteManager.Get(TechType.SmallLocker));
 
         public static void Register()
         {
@@ -30,7 +30,7 @@ namespace AutomationAge.Buildables.Items
 
             prefab.SetGameObject(GetGameObject);
             prefab.SetPdaGroupCategory(TechGroup.ExteriorModules, TechCategory.ExteriorModule);
-            prefab.SetRecipe(new RecipeData(new Ingredient(TechType.Drill, 1), new Ingredient(TechType.AdvancedWiringKit, 1))).WithCraftingTime(5.0f);
+            prefab.SetRecipe(new RecipeData(new Ingredient(TechType.Titanium, 8), new Ingredient(TechType.AdvancedWiringKit, 1))).WithCraftingTime(5.0f);
             prefab.Register();
         }
 
