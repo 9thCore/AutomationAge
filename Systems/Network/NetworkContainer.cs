@@ -23,10 +23,11 @@ namespace AutomationAge.Systems.Network
         private BaseData _data;
         private BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
 
+        private NetworkContainerRestriction _restrictor;
+        private NetworkContainerRestriction Restrictor => _restrictor ??= gameObject.GetComponent<NetworkContainerRestriction>();
+
         public bool interfaceAttached = false;
-        public bool interfaceAllowed = true;
         public bool requesterAttached = false;
-        public bool requesterAllowed = true;
         public bool broadcasting = false;
 
         public void StorageContainer(StorageContainer container)
@@ -47,14 +48,16 @@ namespace AutomationAge.Systems.Network
             bioReactor = reactor;
         }
 
-        public void AllowInterface(bool allowed)
+        public bool RequesterAllowed()
         {
-            interfaceAllowed = allowed;
+            if (Restrictor == null) { return true; }
+            return Restrictor.requesterAllowed;
         }
 
-        public void AllowRequester(bool allowed)
+        public bool InterfaceAllowed()
         {
-            requesterAllowed = allowed;
+            if (Restrictor == null) { return true; }
+            return Restrictor.interfaceAllowed;
         }
 
         public void Start()

@@ -18,13 +18,13 @@ namespace AutomationAge.Systems.Network
                 || __instance.TryGetComponent(out Planter _)
                 || __instance.GetComponentInParent<Driller>() != null) { return; }
 
-            NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();
-            container.StorageContainer(__instance);
-            
             if (__instance.TryGetComponent(out FiltrationMachine _))
             {
-                container.requesterAllowed = false;
+                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false, interfaceAllowed: true);
             }
+
+            NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();
+            container.StorageContainer(__instance);
         }
 
         [HarmonyPostfix]
@@ -52,9 +52,10 @@ namespace AutomationAge.Systems.Network
             {
                 if (go.TryGetComponent(out BaseBioReactor reactor))
                 {
+                    go.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false, interfaceAllowed: true);
+
                     NetworkContainer container = go.AddComponent<NetworkContainer>();
                     container.BioReactor(reactor);
-                    container.AllowInterface(false);
                 }
             }
         }

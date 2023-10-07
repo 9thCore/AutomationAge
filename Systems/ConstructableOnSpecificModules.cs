@@ -39,7 +39,7 @@ namespace AutomationAge.Systems
                 obj => {
                     if(obj.TryGetComponent(out NetworkContainer container))
                     {
-                        return !container.interfaceAttached && container.interfaceAllowed;
+                        return !container.interfaceAttached && container.InterfaceAllowed();
                     }
 
                     return false;
@@ -51,7 +51,7 @@ namespace AutomationAge.Systems
                 {
                     if(obj.TryGetComponent(out NetworkContainer container))
                     {
-                        return !container.requesterAttached && container.requesterAllowed;
+                        return !container.requesterAttached && container.RequesterAllowed();
                     }
 
                     return false;
