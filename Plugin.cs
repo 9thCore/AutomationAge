@@ -37,6 +37,7 @@ namespace AutomationAge
             ItemRequester.Register();
             Miner.Register();
             RockDriller.Register();
+            AutoFabricator.Register();
 
             LanguageHandler.RegisterLocalizationFolder("Language");
         }
