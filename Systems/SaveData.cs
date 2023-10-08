@@ -72,7 +72,6 @@ namespace AutomationAge.Systems
 
         public TechType craftType = TechType.None;
         public float craftElapsedTime = 0f;
-        public float craftDuration = 0f;
 
         public int ResultSizeX = 1;
         public int ResultSizeY = 1;

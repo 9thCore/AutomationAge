@@ -2,13 +2,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UWE;
 
 namespace AutomationAge.Systems.AutoCrafting
 {
     internal class AutoCrafter : MonoBehaviour
     {
         public static float DurationMultiplier = 2f;
+        public static float CraftDuration = 3f;
 
         private bool Initialised = false;
 
@@ -63,37 +66,55 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public void OnInput(InventoryItem item)
         {
-            if (CanStartCraft() && CheckRecipe())
+            if (CanStartCraft())
             {
                 StartCraft(TechType.Battery);
             }
         }
 
-        public void StartCraft(TechType type)
+        public bool CheckAndGetIngredients(out List<Pickupable> itemsToRemove)
         {
-            foreach(KeyValuePair<TechType, int> pair in Ingredients)
+            itemsToRemove = new List<Pickupable>();
+            Dictionary<TechType, int> ingClone = new Dictionary<TechType, int>();
+            foreach (KeyValuePair<TechType, int> pair in Ingredients)
             {
-                int count = pair.Value;
-                List<Pickupable> removedItems = new List<Pickupable>();
+                ingClone.Add(pair.Key, pair.Value);
+            }
 
-                foreach(InventoryItem item in InputContainer.container.GetItems(pair.Key))
+            foreach (InventoryItem item in InputContainer.container)
+            {
+                if (ingClone.ContainsKey(item.techType) && ingClone[item.techType] > 0)
                 {
-                    if (count-- == 0) { break; }
-                    removedItems.Add(item.item);
-                }
-
-                foreach(Pickupable item in removedItems)
-                {
-                    InputContainer.container.RemoveItem(item, true);
-                    Destroy(item.gameObject);
+                    itemsToRemove.Add(item.item);
+                    ingClone[item.techType]--;
                 }
             }
 
-            SaveData.craftType = type;
-            CraftData.GetCraftTime(type, out SaveData.craftDuration);
-            SaveData.craftElapsedTime = 0f;
+            foreach (KeyValuePair<TechType, int> pair in ingClone)
+            {
+                if (pair.Value > 0)
+                {
+                    // Cannot craft, as we don't have enough ingredients
+                    return false;
+                }
+            }
 
-            Plugin.Logger.LogInfo(SaveData.craftDuration);
+            return true;
+        }
+
+        public void StartCraft(TechType type)
+        {
+            List<Pickupable> ingredients;
+            if (!CheckAndGetIngredients(out ingredients)) { return; }
+
+            foreach(Pickupable ingredient in ingredients)
+            {
+                InputContainer.container.RemoveItem(ingredient, true);
+                // Destroy(ingredient.gameObject);
+            }
+            
+            SaveData.craftType = type;
+            SaveData.craftElapsedTime = 0f;
         }
 
         public void Update()
@@ -104,11 +125,10 @@ namespace AutomationAge.Systems.AutoCrafting
             }
 
             SaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
-            if (HasRoomInOutput(SaveData.craftType) && SaveData.craftElapsedTime >= SaveData.craftDuration)
+            if (HasRoomInOutput(SaveData.craftType) && SaveData.craftElapsedTime >= CraftDuration)
             {
-                CreateOutput(SaveData.craftType);
+                CoroutineHost.StartCoroutine(CreateOutput(SaveData.craftType));
                 SaveData.craftElapsedTime = 0f;
-                SaveData.craftDuration = 0f;
                 SaveData.craftType = TechType.None;
             }
         }
@@ -125,12 +145,6 @@ namespace AutomationAge.Systems.AutoCrafting
             {
                 Destroy(go);
                 throw new InvalidOperationException("Tech type " + type + " is not a pickupable!");
-            }
-
-            if (!OutputContainer.container.HasRoomFor(pickupable))
-            {
-                Destroy(go);
-                yield break;
             }
 
             OutputContainer.container.UnsafeAdd(new InventoryItem(pickupable));
@@ -155,19 +169,6 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             Vector2int size = CraftData.GetItemSize(type);
             return OutputContainer.container.HasRoomFor(size.x, size.y);
-        }
-
-        public bool CheckRecipe()
-        {
-            foreach(KeyValuePair<TechType, int> pair in Ingredients)
-            {
-                if (InputContainer.container.GetCount(pair.Key) < pair.Value)
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         public void OnEnable()
