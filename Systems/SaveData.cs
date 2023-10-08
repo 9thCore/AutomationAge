@@ -1,4 +1,5 @@
-﻿using AutomationAge.Systems.Miner;
+﻿using AutomationAge.Systems.AutoCrafting;
+using AutomationAge.Systems.Miner;
 using Nautilus.Handlers;
 using Nautilus.Json;
 using Nautilus.Json.Attributes;
@@ -13,6 +14,7 @@ namespace AutomationAge.Systems
     {
         public Dictionary<string, AttachableSaveData> attachableSaveData = new Dictionary<string, AttachableSaveData>();
         public Dictionary<string, MinerSaveData> minerSaveData = new Dictionary<string, MinerSaveData>();
+        public Dictionary<string, CrafterSaveData> crafterSaveData = new Dictionary<string, CrafterSaveData>();
     }
 
     internal class CatchUpSaveData
@@ -61,6 +63,19 @@ namespace AutomationAge.Systems
 
         public int rockExtrusion = 0;
         public TechType rockTechType = TechType.None;
+    }
+
+    internal class CrafterSaveData
+    {
+        [JsonIgnore]
+        internal AutoCrafter crafter;
+
+        public TechType craftType = TechType.None;
+        public float craftElapsedTime = 0f;
+        public float craftDuration = 0f;
+
+        public int ResultSizeX = 1;
+        public int ResultSizeY = 1;
     }
 
     internal static class SaveHandler
