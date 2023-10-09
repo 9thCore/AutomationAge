@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace AutomationAge.Systems
@@ -28,6 +29,8 @@ namespace AutomationAge.Systems
                         _saveData.attachedPos = Vector3.zero;
                         _saveData.fullyConstructed = Constructable.constructed;
 
+                        string id = gameObject.GetComponent<PrefabIdentifier>().Id;
+                        OnCreateSave(id);
                         Save();
                     }
                     _saveData.module = this;
@@ -54,6 +57,7 @@ namespace AutomationAge.Systems
 
         public virtual void OnAttach(GameObject module) { }
         public virtual void RemoveAttachable() { }
+        public virtual void OnCreateSave(string id) { }
         public virtual void OnSave(string id) { }
         public virtual void OnLoad(string id) { }
         public virtual void OnUnsave(string id) { }
@@ -139,44 +143,11 @@ namespace AutomationAge.Systems
         {
             // Constructed last session, so we don't have a reference to the attached module
             // Attempt to find module to re-attach to
-            Collider[] colliders = Physics.OverlapBox(SaveData.attachedPos, SearchDistance);
-
-            for (int i = 0; i < colliders.Length; i++)
+            if (Utility.FindObject(out GameObject obj, SaveData.attachedPos, SaveData.attachedID, SearchDistance, SaveData.specialModule))
             {
-                Transform tr = colliders[i].transform;
-                while(tr != null)
-                {
-                    GameObject obj = tr.gameObject;
-
-                    switch (SaveData.specialModule)
-                    {
-                        case SpecialModule.NuclearReactor:
-                            GameObject go = obj.transform.parent.gameObject;
-                            if (go.TryGetComponent(out BaseNuclearReactorGeometry geometry))
-                            {
-                                obj = geometry.GetModule().gameObject;
-                            }
-                            break;
-                        case SpecialModule.BioReactor:
-                            GameObject go1 = obj.transform.parent.gameObject;
-                            if (go1.TryGetComponent(out BaseBioReactorGeometry geometry1))
-                            {
-                                obj = geometry1.GetModule().gameObject;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (obj.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == SaveData.attachedID)
-                    {
-                        AttachToModule(obj);
-                        PostLoad();
-                        return;
-                    }
-
-                    tr = tr.parent;
-                }
+                AttachToModule(obj);
+                PostLoad();
+                return;
             }
 
             Plugin.Logger.LogError($"Could not reattach {gameObject.name} at {transform.position} to module id {SaveData.attachedID}. Out!");
