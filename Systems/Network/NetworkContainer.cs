@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ICSharpCode.SharpZipLib.Zip;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,6 +29,7 @@ namespace AutomationAge.Systems.Network
 
         public bool interfaceAttached = false;
         public bool requesterAttached = false;
+        public bool crafterAttached = false;
         public bool broadcasting = false;
 
         public void StorageContainer(StorageContainer container)
@@ -58,6 +60,12 @@ namespace AutomationAge.Systems.Network
         {
             if (Restrictor == null) { return true; }
             return Restrictor.interfaceAllowed;
+        }
+
+        public bool CrafterAllowed()
+        {
+            if (Restrictor == null) { return true; }
+            return Restrictor.crafterAllowed;
         }
 
         public void Start()

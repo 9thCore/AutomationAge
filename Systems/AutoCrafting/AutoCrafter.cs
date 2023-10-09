@@ -8,35 +8,15 @@ using UWE;
 
 namespace AutomationAge.Systems.AutoCrafting
 {
-    internal class AutoCrafter : MonoBehaviour
+    internal class AutoCrafter : AttachableModule
     {
         public static float DurationMultiplier = 2f;
         public static float CraftDuration = 3f;
 
-        private bool Initialised = false;
-
-        private StorageContainer InputContainer;
-
-        private StorageContainer OutputContainer;
-
-        private CrafterSaveData _saveData;
-        public CrafterSaveData SaveData
-        {
-            get
-            {
-                if (_saveData == null)
-                {
-                    if (!Load())
-                    {
-                        _saveData = new CrafterSaveData();
-                        _saveData.crafter = this;
-
-                        Save();
-                    }
-                }
-                return _saveData;
-            }
-        }
+        private bool initialised = false;
+        private StorageContainer inputContainer;
+        private StorageContainer outputContainer;
+        private CrafterSaveData crafterSaveData;
 
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>()
         {
@@ -44,24 +24,17 @@ namespace AutomationAge.Systems.AutoCrafting
             { TechType.Copper, 1 }
         };
 
-        public void Start()
+        public override void Start()
         {
-            InputContainer = gameObject.FindChild(AutoFabricator.InputContainerName).GetComponent<StorageContainer>();
-            OutputContainer = gameObject.FindChild(AutoFabricator.OutputContainerName).GetComponent<StorageContainer>();
+            base.Start();
 
-            InputContainer.container.onAddItem += OnInput;
-            OutputContainer.container.isAllowedToAdd += (_, _) => false;
+            inputContainer = gameObject.FindChild(AutoFabricator.InputContainerName).GetComponent<StorageContainer>();
+            outputContainer = ModuleAttachedTo.GetComponentInChildren<StorageContainer>();
 
-            Initialised = true;
-        }
+            inputContainer.container.onAddItem += OnInput;
+            outputContainer.container.isAllowedToAdd += (_, _) => false;
 
-        public void OnDestroy()
-        {
-            InputContainer.container.onAddItem -= OnInput;
-            if (GetComponent<Constructable>().constructedAmount <= 0f)
-            {
-                Unsave();
-            }
+            initialised = true;
         }
 
         public void OnInput(InventoryItem item)
@@ -81,7 +54,7 @@ namespace AutomationAge.Systems.AutoCrafting
                 ingClone.Add(pair.Key, pair.Value);
             }
 
-            foreach (InventoryItem item in InputContainer.container)
+            foreach (InventoryItem item in inputContainer.container)
             {
                 if (ingClone.ContainsKey(item.techType) && ingClone[item.techType] > 0)
                 {
@@ -104,32 +77,31 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public void StartCraft(TechType type)
         {
-            List<Pickupable> ingredients;
-            if (!CheckAndGetIngredients(out ingredients)) { return; }
+            if (!CheckAndGetIngredients(out List<Pickupable> ingredients)) { return; }
 
             foreach(Pickupable ingredient in ingredients)
             {
-                InputContainer.container.RemoveItem(ingredient, true);
-                // Destroy(ingredient.gameObject);
+                // inputContainer.container.RemoveItem(ingredient, true);
+                Destroy(ingredient.gameObject);
             }
             
-            SaveData.craftType = type;
-            SaveData.craftElapsedTime = 0f;
+            crafterSaveData.craftType = type;
+            crafterSaveData.craftElapsedTime = 0f;
         }
 
         public void Update()
         {
-            if (SaveData.craftType == TechType.None)
+            if (crafterSaveData.craftType == TechType.None)
             {
                 return;
             }
 
-            SaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
-            if (HasRoomInOutput(SaveData.craftType) && SaveData.craftElapsedTime >= CraftDuration)
+            crafterSaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
+            if (HasRoomInOutput(crafterSaveData.craftType) && crafterSaveData.craftElapsedTime >= CraftDuration)
             {
-                CoroutineHost.StartCoroutine(CreateOutput(SaveData.craftType));
-                SaveData.craftElapsedTime = 0f;
-                SaveData.craftType = TechType.None;
+                CoroutineHost.StartCoroutine(CreateOutput(crafterSaveData.craftType));
+                crafterSaveData.craftElapsedTime = 0f;
+                crafterSaveData.craftType = TechType.None;
             }
         }
 
@@ -147,7 +119,7 @@ namespace AutomationAge.Systems.AutoCrafting
                 throw new InvalidOperationException("Tech type " + type + " is not a pickupable!");
             }
 
-            OutputContainer.container.UnsafeAdd(new InventoryItem(pickupable));
+            outputContainer.container.UnsafeAdd(new InventoryItem(pickupable));
         }
 
         public bool CanStartCraft()
@@ -162,52 +134,53 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public bool IsCrafting()
         {
-            return SaveData.craftType != TechType.None;
+            return crafterSaveData.craftType != TechType.None;
         }
 
         public bool HasRoomInOutput(TechType type)
         {
             Vector2int size = CraftData.GetItemSize(type);
-            return OutputContainer.container.HasRoomFor(size.x, size.y);
+            return outputContainer.container.HasRoomFor(size.x, size.y);
         }
 
-        public void OnEnable()
+        public override void StartBehaviour()
         {
-            if (!Initialised) { return; }
+            if (!initialised) { return; }
 
-            InputContainer.gameObject.SetActive(true);
-            OutputContainer.gameObject.SetActive(true);
+            inputContainer.gameObject.SetActive(true);
+            outputContainer.gameObject.SetActive(true);
         }
 
-        public void OnDisable()
+        public override void StopBehaviour()
         {
-            if (!Initialised) { return; }
+            if (!initialised) { return; }
 
-            InputContainer.gameObject.SetActive(false);
-            OutputContainer.gameObject.SetActive(false);
+            inputContainer.gameObject.SetActive(false);
+            outputContainer.gameObject.SetActive(false);
         }
 
-        public void Save()
+        public override void OnCreateSave(string id)
         {
-            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            SaveHandler.data.crafterSaveData[prefabIdentifier.Id] = _saveData;
+            crafterSaveData = new CrafterSaveData();
+            crafterSaveData.crafter = this;
         }
 
-        public bool Load()
+        public override void OnSave(string id)
         {
-            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            if (SaveHandler.data.crafterSaveData.TryGetValue(prefabIdentifier.Id, out _saveData))
+            SaveHandler.data.crafterSaveData[id] = crafterSaveData;
+        }
+
+        public override void OnLoad(string id)
+        {
+            if (SaveHandler.data.crafterSaveData.TryGetValue(id, out crafterSaveData))
             {
-                _saveData.crafter = this;
-                return true;
+                crafterSaveData.crafter = this;
             }
-            return false;
         }
 
-        public void Unsave()
+        public override void OnUnsave(string id)
         {
-            PrefabIdentifier prefabIdentifier = gameObject.GetComponent<PrefabIdentifier>();
-            SaveHandler.data.crafterSaveData.Remove(prefabIdentifier.Id);
+            SaveHandler.data.crafterSaveData.Remove(id);
         }
     }
 }

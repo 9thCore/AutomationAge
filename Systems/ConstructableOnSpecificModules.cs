@@ -4,9 +4,6 @@ using HarmonyLib;
 using UnityEngine;
 using AutomationAge.Systems.Network;
 using AutomationAge.Systems.Miner;
-using System.Diagnostics.CodeAnalysis;
-using UnityEngine.UI;
-using System.CodeDom;
 using AutomationAge.Buildables.Items;
 using AutomationAge.Buildables.Items.Network;
 
@@ -68,6 +65,17 @@ namespace AutomationAge.Systems
 
                     return false;
                 }
+            },
+            {
+                AutoFabricator.Info.TechType,
+                obj =>
+                {
+                    if (obj.TryGetComponent(out NetworkContainer container))
+                    {
+                        return !container.crafterAttached && container.CrafterAllowed();
+                    }
+                    return false;
+                }
             }
         };
 
@@ -85,6 +93,17 @@ namespace AutomationAge.Systems
                     int snappedAdditiveRotation = (int)(Builder.additiveRotation / 2f) * 90;
 
                     obj.rotation = go.transform.rotation * Quaternion.Euler(0f, snappedAdditiveRotation, 0f);
+                    obj.changed = true;
+                }
+            },
+            {
+                AutoFabricator.Info.TechType,
+                (go, obj) =>
+                {
+                    if (!go.TryGetComponent(out NetworkContainer _)) { return; }
+
+                    obj.position = go.transform.position + go.transform.up * 1f + go.transform.forward * 0.25f;
+                    obj.rotation = go.transform.rotation;
                     obj.changed = true;
                 }
             }

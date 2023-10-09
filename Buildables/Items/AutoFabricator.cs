@@ -39,11 +39,9 @@ namespace AutomationAge.Buildables.Items
             GameObject model = obj.transform.Find("Model").gameObject;
 
             GameObject inputContainer = obj.transform.Find(InputContainerName).gameObject;
-            GameObject outputContainer = obj.transform.Find(OutputContainerName).gameObject;
 
             obj.AddComponent<AutoCrafter>();
             inputContainer.AddComponent<NetworkContainerRestriction>().Restrict(interfaceAllowed: false, requesterAllowed: true);
-            outputContainer.AddComponent<NetworkContainerRestriction>().Restrict(interfaceAllowed: true, requesterAllowed: false);
 
             foreach (UniqueIdentifier uid in obj.GetComponentsInChildren<UniqueIdentifier>())
             {
