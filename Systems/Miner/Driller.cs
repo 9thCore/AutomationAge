@@ -126,8 +126,7 @@ namespace AutomationAge.Systems.Miner
         {
             yield return new WaitForSeconds(HitTime);
 
-            float waitTime;
-            if(!GetWaitTime(out waitTime)) { yield return new WaitForSeconds(waitTime); }
+            if(!GetWaitTime(out float waitTime)) { yield return new WaitForSeconds(waitTime); }
 
             PickUpResource(pickupable);
         }
@@ -166,8 +165,7 @@ namespace AutomationAge.Systems.Miner
 
         public IEnumerator BreakChunk(BreakableResource chunk)
         {
-            float waitTime;
-            if (!GetWaitTime(out waitTime)) { yield return new WaitForSeconds(waitTime); }
+            if (!GetWaitTime(out float waitTime)) { yield return new WaitForSeconds(waitTime); }
 
             while (chunk.hitsToBreak > 1)
             {
