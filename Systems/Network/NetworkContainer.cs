@@ -64,7 +64,7 @@ namespace AutomationAge.Systems.Network
 
         public bool CrafterAllowed()
         {
-            if (Restrictor == null) { return true; }
+            if (Restrictor == null) { return false; }
             return Restrictor.crafterAllowed;
         }
 

@@ -20,7 +20,12 @@ namespace AutomationAge.Systems.Network
 
             if (__instance.TryGetComponent(out FiltrationMachine _))
             {
-                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false, interfaceAllowed: true);
+                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false);
+            }
+            else if (!__instance.TryGetComponent(out Aquarium _))
+            {
+                // Basic storage container
+                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(crafterAllowed: true);
             }
 
             NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();
