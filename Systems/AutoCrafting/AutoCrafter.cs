@@ -41,8 +41,16 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             if (CanStartCraft())
             {
-                StartCraft(TechType.Battery);
+                CoroutineHost.StartCoroutine(WaitThenStartCraft(TechType.Battery));
             }
+        }
+
+        public IEnumerator WaitThenStartCraft(TechType type)
+        {
+            // Wait a frame for the tooltip to go away
+            yield return new WaitForEndOfFrame();
+
+            StartCraft(type);
         }
 
         public bool CheckAndGetIngredients(out List<Pickupable> itemsToRemove)
@@ -81,7 +89,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
             foreach(Pickupable ingredient in ingredients)
             {
-                // inputContainer.container.RemoveItem(ingredient, true);
+                inputContainer.container.RemoveItem(ingredient, true);
                 Destroy(ingredient.gameObject);
             }
             
