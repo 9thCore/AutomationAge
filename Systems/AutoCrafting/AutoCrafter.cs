@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UWE;
 
@@ -17,12 +16,10 @@ namespace AutomationAge.Systems.AutoCrafting
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
         private CrafterSaveData crafterSaveData;
+        private TechType recipeTech; // To-do: change this to an item down the line
 
-        public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>()
-        {
-            { TechType.Titanium, 2 },
-            { TechType.Copper, 1 }
-        };
+        public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
+        public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
 
         public override void Start()
         {
@@ -34,6 +31,8 @@ namespace AutomationAge.Systems.AutoCrafting
             inputContainer.container.onAddItem += OnInput;
             outputContainer.container.isAllowedToAdd += (_, _) => false;
 
+            SetRecipe(TechType.Battery);
+
             initialised = true;
         }
 
@@ -41,7 +40,7 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             if (CanStartCraft())
             {
-                CoroutineHost.StartCoroutine(WaitThenStartCraft(TechType.Battery));
+                CoroutineHost.StartCoroutine(WaitThenStartCraft(recipeTech));
             }
         }
 
@@ -53,25 +52,52 @@ namespace AutomationAge.Systems.AutoCrafting
             StartCraft(type);
         }
 
+        public void CopyModifiableIngredients()
+        {
+            IngredientsModifiable.Clear();
+            foreach(KeyValuePair<TechType, int> pair in Ingredients)
+            {
+                IngredientsModifiable.Add(pair.Key, pair.Value);
+            }
+        }
+
+        public bool SetRecipe(TechType type)
+        {
+            ITechData data = CraftData.Get(type);
+            if (data == null)
+            {
+                Plugin.Logger.LogWarning("Cannot get tech data!");
+                return false;
+            }
+
+            Ingredients.Clear();
+            for(int i = 0; i < data.ingredientCount; i++)
+            {
+                IIngredient ing = data.GetIngredient(i);
+                Ingredients.Add(ing.techType, ing.amount);
+            }
+
+            recipeTech = type;
+
+            return true;
+        }
+
         public bool CheckAndGetIngredients(out List<Pickupable> itemsToRemove)
         {
+            CopyModifiableIngredients();
+
             itemsToRemove = new List<Pickupable>();
-            Dictionary<TechType, int> ingClone = new Dictionary<TechType, int>();
-            foreach (KeyValuePair<TechType, int> pair in Ingredients)
-            {
-                ingClone.Add(pair.Key, pair.Value);
-            }
 
             foreach (InventoryItem item in inputContainer.container)
             {
-                if (ingClone.ContainsKey(item.techType) && ingClone[item.techType] > 0)
+                if (IngredientsModifiable.ContainsKey(item.techType) && IngredientsModifiable[item.techType] > 0)
                 {
                     itemsToRemove.Add(item.item);
-                    ingClone[item.techType]--;
+                    IngredientsModifiable[item.techType]--;
                 }
             }
 
-            foreach (KeyValuePair<TechType, int> pair in ingClone)
+            foreach (KeyValuePair<TechType, int> pair in IngredientsModifiable)
             {
                 if (pair.Value > 0)
                 {
