@@ -1,5 +1,6 @@
 ﻿using AutomationAge.Buildables.Items;
 using AutomationAge.Buildables.Items.Network;
+using AutomationAge.Items;
 using AutomationAge.Systems;
 using BepInEx;
 using BepInEx.Logging;
@@ -38,6 +39,7 @@ namespace AutomationAge
             Miner.Register();
             RockDriller.Register();
             AutoFabricator.Register();
+            ItemBlueprint.Register();
 
             LanguageHandler.RegisterLocalizationFolder("Language");
         }
