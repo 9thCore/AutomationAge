@@ -115,7 +115,7 @@ namespace AutomationAge.Systems.Network
 
         public bool IsAnythingAttached()
         {
-            return interfaceAttached || requesterAttached;
+            return interfaceAttached || requesterAttached || crafterAttached;
         }
 
         public bool ContainsItems()

@@ -1,4 +1,6 @@
 ﻿using AutomationAge.Buildables.Items;
+using AutomationAge.Systems.Miner;
+using AutomationAge.Systems.Network;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +14,7 @@ namespace AutomationAge.Systems.AutoCrafting
         public static float DurationMultiplier = 2f;
         public static float CraftDuration = 3f;
 
+        private NetworkContainer container;
         private bool initialised = false;
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
@@ -20,6 +23,25 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
         public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
+
+        public override void OnAttach(GameObject module)
+        {
+            container = module.GetComponentInChildren<NetworkContainer>();
+            if (container == null)
+            {
+                Plugin.Logger.LogWarning("Cannot install crafter on something without a container!");
+                Destroy(this);
+                return;
+            }
+
+            container.crafterAttached = true;
+        }
+        public override void RemoveAttachable()
+        {
+            if (container == null) { return; }
+
+            container.crafterAttached = false;
+        }
 
         public override void Start()
         {
@@ -182,7 +204,6 @@ namespace AutomationAge.Systems.AutoCrafting
             if (!initialised) { return; }
 
             inputContainer.gameObject.SetActive(true);
-            outputContainer.gameObject.SetActive(true);
         }
 
         public override void StopBehaviour()
@@ -190,7 +211,6 @@ namespace AutomationAge.Systems.AutoCrafting
             if (!initialised) { return; }
 
             inputContainer.gameObject.SetActive(false);
-            outputContainer.gameObject.SetActive(false);
         }
 
         public override void OnCreateSave(string id)
