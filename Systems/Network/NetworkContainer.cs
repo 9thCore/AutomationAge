@@ -21,8 +21,10 @@ namespace AutomationAge.Systems.Network
         internal BaseNuclearReactor nuclearReactor;
         internal BaseBioReactor bioReactor;
 
+        public GameObject PrefabRoot = null;
+
         private BaseData _data;
-        private BaseData Data => _data ??= transform.parent.gameObject.EnsureComponent<BaseData>();
+        private BaseData Data => _data ??= PrefabRoot.transform.parent.gameObject.EnsureComponent<BaseData>();
 
         private NetworkContainerRestriction _restrictor;
         private NetworkContainerRestriction Restrictor => _restrictor ??= gameObject.GetComponent<NetworkContainerRestriction>();
@@ -70,9 +72,14 @@ namespace AutomationAge.Systems.Network
 
         public void Start()
         {
+            if (PrefabRoot == null)
+            {
+                PrefabRoot = gameObject;
+            }
+
             Data.AddContainer(this);
 
-            switch(Type)
+            switch (Type)
             {
                 case ContainerType.StorageContainer:
                     storageContainer.container.onAddItem += OnAddItem;
@@ -165,7 +172,7 @@ namespace AutomationAge.Systems.Network
                         }
                     }
 
-                    if(slot == null) { return null; }
+                    if (slot == null) { return null; }
                     return nuclearReactor.equipment.RemoveItem(slot, true, false).item;
                 case ContainerType.BioReactor:
                     return bioReactor.container.RemoveItem(techType);
@@ -250,7 +257,7 @@ namespace AutomationAge.Systems.Network
                     }
                     return items;
                 case ContainerType.NuclearReactor:
-                    foreach(KeyValuePair<string, InventoryItem> pair in nuclearReactor.equipment.equipment)
+                    foreach (KeyValuePair<string, InventoryItem> pair in nuclearReactor.equipment.equipment)
                     {
                         if (pair.Value != null)
                         {

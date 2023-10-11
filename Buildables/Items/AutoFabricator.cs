@@ -42,6 +42,8 @@ namespace AutomationAge.Buildables.Items
 
             obj.AddComponent<AutoCrafter>();
             inputContainer.AddComponent<NetworkContainerRestriction>().Restrict(interfaceAllowed: false, requesterAllowed: true);
+            NetworkContainer c = inputContainer.AddComponent<NetworkContainer>();
+            c.PrefabRoot = obj;
 
             foreach (UniqueIdentifier uid in obj.GetComponentsInChildren<UniqueIdentifier>())
             {
