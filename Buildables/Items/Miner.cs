@@ -20,7 +20,12 @@ namespace AutomationAge.Buildables.Items
 
             prefab.SetGameObject(GetGameObject);
             prefab.SetPdaGroupCategory(TechGroup.ExteriorModules, TechCategory.ExteriorModule);
-            prefab.SetRecipe(new RecipeData(new Ingredient(TechType.Titanium, 2), new Ingredient(TechType.WiringKit, 1))).WithCraftingTime(10.0f);
+            prefab.SetRecipe(
+                new RecipeData(
+                    new Ingredient(TechType.Titanium, 2),
+                    new Ingredient(TechType.WiringKit, 1)))
+                .WithCraftingTime(10.0f)
+                .WithFabricatorType(CraftTree.Type.Constructor);
             prefab.Register();
         }
 

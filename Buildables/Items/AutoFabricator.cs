@@ -28,8 +28,9 @@ namespace AutomationAge.Buildables.Items
                 new RecipeData(
                     new Ingredient(TechType.Titanium, 3),
                     new Ingredient(TechType.AdvancedWiringKit, 1),
-                    new Ingredient(TechType.ComputerChip, 1))
-                ).WithCraftingTime(10.0f);
+                    new Ingredient(TechType.ComputerChip, 1)))
+                .WithCraftingTime(10.0f)
+                .WithFabricatorType(CraftTree.Type.Constructor);
             prefab.Register();
         }
 
