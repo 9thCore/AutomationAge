@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace AutomationAge.Systems
+namespace AutomationAge.Systems.Attach
 {
     public class AttachableModule : MonoBehaviour, IConstructable
     {
