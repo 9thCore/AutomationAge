@@ -7,7 +7,7 @@ using AutomationAge.Systems.Miner;
 using AutomationAge.Buildables.Items;
 using AutomationAge.Buildables.Items.Network;
 
-namespace AutomationAge.Systems
+namespace AutomationAge.Systems.Attach
 {
     // Class that patches builder methods in order to only allow something to be constructable on other modules with specific requirements
 
@@ -117,17 +117,19 @@ namespace AutomationAge.Systems
             matchingObject = null;
 
             Transform tr = go.transform;
-            while(tr.parent != null)
+            while (tr.parent != null)
             {
                 if (tr.gameObject.TryGetComponent(out BaseNuclearReactorGeometry geometry))
                 {
                     matchingObject = geometry.GetModule().gameObject;
                     return true;
-                } else if (tr.gameObject.TryGetComponent(out BaseBioReactorGeometry geometry1))
+                }
+                else if (tr.gameObject.TryGetComponent(out BaseBioReactorGeometry geometry1))
                 {
                     matchingObject = geometry1.GetModule().gameObject;
                     return true;
-                } else if (tr.gameObject.TryGetComponent(out BaseFiltrationMachineGeometry geometry2))
+                }
+                else if (tr.gameObject.TryGetComponent(out BaseFiltrationMachineGeometry geometry2))
                 {
                     matchingObject = geometry2.GetModule().gameObject;
                     return true;
@@ -152,7 +154,8 @@ namespace AutomationAge.Systems
 
             Transform tr = hitCollider.transform;
 
-            if (IsSpecialModule(tr.gameObject, out GameObject obj)) {
+            if (IsSpecialModule(tr.gameObject, out GameObject obj))
+            {
                 attachedModule = obj;
                 __result = func(obj);
                 return;

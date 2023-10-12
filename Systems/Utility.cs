@@ -1,4 +1,4 @@
-﻿using static AutomationAge.Systems.AttachableModule;
+﻿using static AutomationAge.Systems.Attach.AttachableModule;
 using UnityEngine;
 
 namespace AutomationAge.Systems

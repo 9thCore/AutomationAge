@@ -5,6 +5,7 @@ using UnityEngine.AddressableAssets;
 using System.Collections.Generic;
 using Nautilus.Utility;
 using AutomationAge.Buildables.Items;
+using AutomationAge.Systems.Attach;
 
 namespace AutomationAge.Systems.Miner
 {
