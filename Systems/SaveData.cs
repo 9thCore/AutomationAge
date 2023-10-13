@@ -1,4 +1,6 @@
-﻿using AutomationAge.Systems.AutoCrafting;
+﻿using AutomationAge.Systems.Attach;
+using AutomationAge.Systems.AutoCrafting;
+using AutomationAge.Systems.Blueprint;
 using AutomationAge.Systems.Miner;
 using Nautilus.Handlers;
 using Nautilus.Json;
@@ -15,6 +17,7 @@ namespace AutomationAge.Systems
         public Dictionary<string, AttachableSaveData> attachableSaveData = new Dictionary<string, AttachableSaveData>();
         public Dictionary<string, MinerSaveData> minerSaveData = new Dictionary<string, MinerSaveData>();
         public Dictionary<string, CrafterSaveData> crafterSaveData = new Dictionary<string, CrafterSaveData>();
+        public Dictionary<string, BlueprintSaveData> blueprintSaveData = new Dictionary<string, BlueprintSaveData>();
     }
 
     internal class CatchUpSaveData
@@ -75,6 +78,14 @@ namespace AutomationAge.Systems
 
         public int ResultSizeX = 1;
         public int ResultSizeY = 1;
+    }
+
+    internal class BlueprintSaveData
+    {
+        [JsonIgnore]
+        internal BlueprintIdentifier identifier;
+
+        public TechType CopiedType = TechType.None;
     }
 
     internal static class SaveHandler

@@ -4,7 +4,7 @@ using static CraftData;
 using Nautilus.Assets.Gadgets;
 using Nautilus.Assets.PrefabTemplates;
 using UnityEngine;
-using AutomationAge.Systems;
+using AutomationAge.Systems.Blueprint;
 
 namespace AutomationAge.Items
 {
