@@ -29,7 +29,7 @@ namespace AutomationAge
             SaveHandler.Register();
 
             Harmony.CreateAndPatchAll(Assembly, $"{PluginInfo.PLUGIN_GUID}");
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_NAME}, v{PluginInfo.PLUGIN_VERSION} is loaded!");
         }
 
         public void Start()
