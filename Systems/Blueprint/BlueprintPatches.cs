@@ -43,6 +43,11 @@ namespace AutomationAge.Systems.Blueprint
                 codes.Insert(insertIndex, new CodeInstruction(OpCodes.Call, destroyInfo));
                 codes.Insert(insertIndex, new CodeInstruction(getGameObject));
             }
+
+            foreach(CodeInstruction code in codes)
+            {
+                Plugin.Logger.LogWarning(code);
+            }
             
             return instructions.AsEnumerable();
         }
