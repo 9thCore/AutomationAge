@@ -43,19 +43,12 @@ namespace AutomationAge.Systems.Blueprint
                 codes.Insert(insertIndex, new CodeInstruction(OpCodes.Call, destroyInfo));
                 codes.Insert(insertIndex, new CodeInstruction(getGameObject));
             }
-
-            foreach(CodeInstruction code in codes)
-            {
-                Plugin.Logger.LogWarning(code);
-            }
             
             return instructions.AsEnumerable();
         }
 
-        public static void TryRemoveBlueprintData(Pickupable item)
+        public static void TryRemoveBlueprintData(GameObject obj)
         {
-            GameObject obj = item.gameObject;
-
             if (obj.TryGetComponent(out BlueprintIdentifier _) && obj.TryGetComponent(out PrefabIdentifier identifier))
             {
                 SaveHandler.data.blueprintSaveData.Remove(identifier.Id);
