@@ -13,7 +13,6 @@ namespace AutomationAge.Buildables.Items
     internal class AutoFabricator
     {
         public static string InputContainerName = "ContainerInput";
-        public static string OutputContainerName = "ContainerOutput";
 
         public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("AutoFabricator", "Automatic Fabricator", "Automatically processes ingredients into a given result. Requires a recipe blueprint.")
             .WithIcon(SpriteManager.Get(TechType.Fabricator));
