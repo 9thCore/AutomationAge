@@ -29,6 +29,7 @@ namespace AutomationAge.Systems.Blueprint
 
             int insertIndex = -1;
             CodeInstruction getGameObject = null;
+            CodeInstruction loadLocal = null;
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count; i++)
             {
@@ -37,6 +38,7 @@ namespace AutomationAge.Systems.Blueprint
                 if (code.Calls(destroyInfo)) {
                     insertIndex = i - 2;
                     getGameObject = codes[i - 1];
+                    loadLocal = codes[i - 2];
                     break;
                 }
             }
@@ -45,7 +47,7 @@ namespace AutomationAge.Systems.Blueprint
             {
                 codes.Insert(insertIndex, new CodeInstruction(OpCodes.Call, patchInfo));
                 codes.Insert(insertIndex, new CodeInstruction(getGameObject));
-                codes.Insert(insertIndex, new CodeInstruction(OpCodes.Ldloc_1));
+                codes.Insert(insertIndex, new CodeInstruction(loadLocal));
             }
 
             return codes.AsEnumerable();
