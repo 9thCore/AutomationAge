@@ -54,5 +54,33 @@ namespace AutomationAge.Systems.Blueprint
                 SaveHandler.data.blueprintSaveData.Remove(identifier.Id);
             }
         }
+
+        [HarmonyPatch(typeof(uGUI_ItemsContainer), nameof(uGUI_ItemsContainer.OnAddItem))]
+        [HarmonyPostfix]
+        public static void OnAddItemPostfix(InventoryItem item, uGUI_ItemsContainer __instance)
+        {
+            GameObject obj = item.item.gameObject;
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
+
+            blueprint.AddOverlay(__instance);
+        }
+
+        [HarmonyPatch(typeof(uGUI_ItemsContainer), nameof(uGUI_ItemsContainer.OnRemoveItem))]
+        [HarmonyPostfix]
+        public static void OnRemoveItemPostfix(InventoryItem item, uGUI_ItemsContainer __instance)
+        {
+            GameObject obj = item.item.gameObject;
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
+
+            blueprint.RemoveOverlay();
+        }
+
+        [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStart))]
+        [HarmonyPostfix]
+        public static void DragStartPostfix(InventoryItem item)
+        {
+            GameObject obj = item.item.gameObject;
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
+        }
     }
 }

@@ -5,6 +5,7 @@ using Nautilus.Assets.Gadgets;
 using Nautilus.Assets.PrefabTemplates;
 using UnityEngine;
 using AutomationAge.Systems.Blueprint;
+using Nautilus.Handlers;
 
 namespace AutomationAge.Items
 {
@@ -30,6 +31,7 @@ namespace AutomationAge.Items
                 .WithFabricatorType(CraftTree.Type.Fabricator);
 
             prefab.SetPdaGroupCategory(TechGroup.Personal, TechCategory.Equipment);
+            prefab.SetEquipment(BlueprintIdentifier.GetEquipmentType());
 
             prefab.Register();
         }
