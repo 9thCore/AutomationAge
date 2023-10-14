@@ -67,7 +67,7 @@ namespace AutomationAge.Systems.Blueprint
 
         [HarmonyPatch(typeof(uGUI_ItemsContainer), nameof(uGUI_ItemsContainer.OnRemoveItem))]
         [HarmonyPostfix]
-        public static void OnRemoveItemPostfix(InventoryItem item, uGUI_ItemsContainer __instance)
+        public static void OnRemoveItemPostfix(InventoryItem item)
         {
             GameObject obj = item.item.gameObject;
             if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
@@ -81,6 +81,10 @@ namespace AutomationAge.Systems.Blueprint
         {
             GameObject obj = item.item.gameObject;
             if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
+            if (blueprint.GetTech() == TechType.None) { return; }
+
+            uGUI_ItemIcon overlay = BlueprintIdentifier.CreateOverlay(null, ItemDragManager.instance.draggedIcon);
+            BlueprintIdentifier.UpdateSprite(overlay, blueprint.GetTech());
         }
     }
 }

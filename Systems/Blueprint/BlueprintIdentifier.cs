@@ -1,4 +1,5 @@
 ﻿using Nautilus.Handlers;
+using System.Drawing;
 using UnityEngine;
 
 namespace AutomationAge.Systems.Blueprint
@@ -48,7 +49,7 @@ namespace AutomationAge.Systems.Blueprint
         {
             LoadSaveIfRequired();
             saveData.CopiedType = tech;
-            UpdateSprite();
+            UpdateSprite(overlayIcon, tech);
         }
 
         public void AddOverlay(uGUI_ItemsContainer manager)
@@ -62,21 +63,24 @@ namespace AutomationAge.Systems.Blueprint
                 return;
             }
 
+            overlayIcon = CreateOverlay(manager, icon);
+            UpdateSprite(overlayIcon, saveData.CopiedType);
+        }
+
+        public static uGUI_ItemIcon CreateOverlay(uGUI_IIconManager manager, uGUI_ItemIcon icon)
+        {
             GameObject overlay = new GameObject();
             uGUI_ItemIcon overlayIcon = overlay.AddComponent<uGUI_ItemIcon>();
             CanvasGroup group = overlay.AddComponent<CanvasGroup>();
 
             overlayIcon.Init(manager, overlay.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            overlayIcon.SetForegroundAlpha(OverlayAlpha);
             overlay.transform.SetParent(icon.transform);
             overlay.transform.localPosition = new Vector3(icon.backgroundSize.x / 2f, -icon.backgroundSize.y / 2f);
             overlay.transform.localScale = HalfVector;
             group.interactable = false;
             group.blocksRaycasts = false;
 
-            this.overlayIcon = overlayIcon;
-
-            UpdateSprite();
+            return overlayIcon;
         }
 
         public void RemoveOverlay()
@@ -91,10 +95,11 @@ namespace AutomationAge.Systems.Blueprint
             return overlayIcon != null;
         }
 
-        public void UpdateSprite()
+        public static void UpdateSprite(uGUI_ItemIcon overlay, TechType tech)
         {
-            if (!HasOverlay() || saveData.CopiedType == TechType.None) { return; }
-            overlayIcon.SetForegroundSprite(SpriteManager.Get(saveData.CopiedType));
+            if (overlay == null || tech == TechType.None) { return; }
+            overlay.SetForegroundSprite(SpriteManager.Get(tech));
+            overlay.SetForegroundAlpha(OverlayAlpha);
         }
 
         public bool Load()
