@@ -17,8 +17,10 @@ namespace AutomationAge.Systems.Blueprint
 
         // Patch the DestroyItem method to grab the removed item before it's fully destroyed
         // and call TryRemoveBlueprintData with it
+        // (also patch Trashcan.Update with the same transpiler because it's the same code)
 
         [HarmonyPatch(typeof(ItemsContainer), nameof(ItemsContainer.DestroyItem))]
+        [HarmonyPatch(typeof(Trashcan), nameof(Trashcan.Update))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> DestroyItemTranspile(IEnumerable<CodeInstruction> instructions)
         {
@@ -33,8 +35,7 @@ namespace AutomationAge.Systems.Blueprint
                 CodeInstruction code = codes[i];
 
                 if (code.Calls(destroyInfo)) {
-                    code.operand = patchInfo;
-                    insertIndex = i + 1;
+                    insertIndex = i - 2;
                     getGameObject = codes[i - 1];
                     break;
                 }
@@ -42,10 +43,11 @@ namespace AutomationAge.Systems.Blueprint
 
             if (insertIndex > -1)
             {
-                codes.Insert(insertIndex, new CodeInstruction(OpCodes.Call, destroyInfo));
+                codes.Insert(insertIndex, new CodeInstruction(OpCodes.Call, patchInfo));
                 codes.Insert(insertIndex, new CodeInstruction(getGameObject));
+                codes.Insert(insertIndex, new CodeInstruction(OpCodes.Ldloc_1));
             }
-            
+
             return instructions.AsEnumerable();
         }
 
