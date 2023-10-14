@@ -13,6 +13,8 @@ namespace AutomationAge.Systems.Blueprint
     [HarmonyPatch]
     internal static class BlueprintPatches
     {
+        public static uGUI_ItemIcon draggedItemOverlay = null;
+
         // Patch the DestroyItem method to grab the removed item before it's fully destroyed
         // and call TryRemoveBlueprintData with it
 
@@ -83,8 +85,19 @@ namespace AutomationAge.Systems.Blueprint
             if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
             if (blueprint.GetTech() == TechType.None) { return; }
 
-            uGUI_ItemIcon overlay = BlueprintIdentifier.CreateOverlay(null, ItemDragManager.instance.draggedIcon);
-            BlueprintIdentifier.UpdateSprite(overlay, blueprint.GetTech());
+            draggedItemOverlay = BlueprintIdentifier.CreateOverlay(null, ItemDragManager.instance.draggedIcon);
+            draggedItemOverlay.transform.localPosition = Vector3.zero;
+            BlueprintIdentifier.UpdateSprite(draggedItemOverlay, blueprint.GetTech());
+        }
+
+        [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStop))]
+        [HarmonyPrefix]
+        public static void DragStopPostfix()
+        {
+            if (draggedItemOverlay == null) { return; }
+
+            UnityEngine.Object.Destroy(draggedItemOverlay.gameObject);
+            draggedItemOverlay = null;
         }
     }
 }

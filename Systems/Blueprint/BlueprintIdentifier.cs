@@ -1,5 +1,4 @@
 ﻿using Nautilus.Handlers;
-using System.Drawing;
 using UnityEngine;
 
 namespace AutomationAge.Systems.Blueprint
@@ -9,6 +8,7 @@ namespace AutomationAge.Systems.Blueprint
         public const float OverlayAlpha = 0.5f;
         public static readonly Vector3 HalfVector = new Vector3(0.5f, 0.5f);
         public const string EquipmentTypeName = "ItemBlueprint";
+        public const string OverlayIconName = "OverlayIcon";
 
         private Pickupable pickupable;
         private PrefabIdentifier identifier;
@@ -21,6 +21,11 @@ namespace AutomationAge.Systems.Blueprint
             if (equipmentType != EquipmentType.None) { return equipmentType; }
             equipmentType = EnumHandler.AddEntry<EquipmentType>(EquipmentTypeName);
             return equipmentType;
+        }
+
+        public void DebugUpdateSprite()
+        {
+            UpdateSprite(overlayIcon, saveData.CopiedType);
         }
 
         public void LoadSaveIfRequired()
@@ -69,7 +74,10 @@ namespace AutomationAge.Systems.Blueprint
 
         public static uGUI_ItemIcon CreateOverlay(uGUI_IIconManager manager, uGUI_ItemIcon icon)
         {
-            GameObject overlay = new GameObject();
+            GameObject overlay = new GameObject(OverlayIconName)
+            {
+                layer = LayerID.UI
+            };
             uGUI_ItemIcon overlayIcon = overlay.AddComponent<uGUI_ItemIcon>();
             CanvasGroup group = overlay.AddComponent<CanvasGroup>();
 
@@ -77,6 +85,7 @@ namespace AutomationAge.Systems.Blueprint
             overlay.transform.SetParent(icon.transform);
             overlay.transform.localPosition = new Vector3(icon.backgroundSize.x / 2f, -icon.backgroundSize.y / 2f);
             overlay.transform.localScale = HalfVector;
+            overlay.transform.localEulerAngles = Vector3.zero;
             group.interactable = false;
             group.blocksRaycasts = false;
 
