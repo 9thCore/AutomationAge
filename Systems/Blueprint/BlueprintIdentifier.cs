@@ -64,12 +64,15 @@ namespace AutomationAge.Systems.Blueprint
 
             GameObject overlay = new GameObject();
             uGUI_ItemIcon overlayIcon = overlay.AddComponent<uGUI_ItemIcon>();
+            CanvasGroup group = overlay.AddComponent<CanvasGroup>();
 
             overlayIcon.Init(manager, overlay.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             overlayIcon.SetForegroundAlpha(OverlayAlpha);
             overlay.transform.SetParent(icon.transform);
             overlay.transform.localPosition = new Vector3(icon.backgroundSize.x / 2f, -icon.backgroundSize.y / 2f);
             overlay.transform.localScale = HalfVector;
+            group.interactable = false;
+            group.blocksRaycasts = false;
 
             this.overlayIcon = overlayIcon;
 
