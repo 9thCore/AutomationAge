@@ -48,7 +48,7 @@ namespace AutomationAge.Systems.Blueprint
                 codes.Insert(insertIndex, new CodeInstruction(OpCodes.Ldloc_1));
             }
 
-            return instructions.AsEnumerable();
+            return codes.AsEnumerable();
         }
 
         public static void TryRemoveBlueprintData(GameObject obj)
