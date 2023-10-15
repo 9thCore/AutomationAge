@@ -1,4 +1,6 @@
 {
   "ConfigureFilter": "Configure filter",
-  "CannotDeconstructHasRock": "Cannot deconstruct. Extruder contains an uncollected extruded rock"
+  "CannotDeconstructHasRock": "Cannot deconstruct. Extruder contains an uncollected extruded rock",
+  "UseBlueprintEncoder": "Use blueprint encoder",
+  "Tooltip_UseBlueprintEncoder": "Open GUI"
 }

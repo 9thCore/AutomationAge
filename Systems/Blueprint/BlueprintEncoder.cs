@@ -161,7 +161,7 @@ namespace AutomationAge.Systems.Blueprint
 
         public void OnHandHover(GUIHand hand)
         {
-            HandReticle.main.SetText(HandReticle.TextType.Hand, BlueprintEncoderUse, false, GameInput.Button.LeftHand);
+            HandReticle.main.SetText(HandReticle.TextType.Hand, BlueprintEncoderUse, true, GameInput.Button.LeftHand);
             HandReticle.main.SetText(HandReticle.TextType.HandSubscript, BlueprintEncoderUseTooltip, true, GameInput.Button.None);
             HandReticle.main.SetIcon(HandReticle.IconType.Hand, 1f);
         }
