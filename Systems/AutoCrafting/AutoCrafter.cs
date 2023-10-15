@@ -70,7 +70,7 @@ namespace AutomationAge.Systems.AutoCrafting
         public IEnumerator WaitThenStartCraft(TechType type)
         {
             // Wait a frame for the tooltip to go away
-            yield return new WaitForEndOfFrame();
+            yield return null;
 
             StartCraft(type);
         }
