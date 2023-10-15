@@ -81,6 +81,26 @@ namespace AutomationAge.Systems.Blueprint
             blueprint.RemoveOverlay();
         }
 
+        [HarmonyPatch(typeof(uGUI_Equipment), nameof(uGUI_Equipment.OnEquip))]
+        [HarmonyPostfix]
+        public static void OnEquipPostfix(InventoryItem item, uGUI_Equipment __instance)
+        {
+            GameObject obj = item.item.gameObject;
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint) || !__instance.items.TryGetValue(item, out uGUI_EquipmentSlot slot)) { return; }
+
+            blueprint.AddOverlay(null, slot.icon, true);
+        }
+
+        [HarmonyPatch(typeof(uGUI_Equipment), nameof(uGUI_Equipment.OnUnequip))]
+        [HarmonyPrefix]
+        public static void OnUnequipPrefix(InventoryItem item)
+        {
+            GameObject obj = item.item.gameObject;
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
+
+            blueprint.RemoveOverlay();
+        }
+
         [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStart))]
         [HarmonyPostfix]
         public static void DragStartPostfix(InventoryItem item)
@@ -104,11 +124,31 @@ namespace AutomationAge.Systems.Blueprint
             draggedItemOverlay = null;
         }
 
-        [HarmonyPatch(typeof(uGUI_PDA), nameof(uGUI_PDA.Start))]
-        [HarmonyPostfix]
-        public static void PDAStartPostfix(uGUI_PDA __instance)
+        [HarmonyPatch(typeof(uGUI_Equipment), nameof(uGUI_Equipment.Awake))]
+        [HarmonyPrefix]
+        public static void AwakePrefix(uGUI_Equipment __instance)
         {
-            BlueprintEncoder.CreateEquipmentSlots(__instance);
+            foreach (uGUI_EquipmentSlot slot in __instance.GetComponentsInChildren<uGUI_EquipmentSlot>())
+            {
+                if (slot.slot == BaseNuclearReactor.slotIDs[0])
+                {
+                    BlueprintEncoder.CreateEquipmentSlots(slot.gameObject);
+                    return;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Equipment), nameof(Equipment.IsCompatible))]
+        [HarmonyPrefix]
+        public static bool IsCompatiblePrefix(EquipmentType slotType, ref bool __result)
+        {
+            if (slotType == BlueprintEncoder.anyEquipmentType)
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
         }
     }
 }

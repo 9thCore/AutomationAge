@@ -1,6 +1,8 @@
 ﻿using AutomationAge.Buildables.Items;
 using Nautilus.Handlers;
+using System.Collections;
 using UnityEngine;
+using UWE;
 
 namespace AutomationAge.Systems.Blueprint
 {
@@ -11,6 +13,8 @@ namespace AutomationAge.Systems.Blueprint
         public const string BlueprintEncoderUseTooltip = "Tooltip_UseBlueprintEncoder";
         public const string PrinterBlueprintSlot = "Printer_BlueprintSlot";
         public const string PrinterAnySlot = "Printer_AnySlot";
+        public static readonly Vector3 AnySlotPosition = new Vector3(0f, 100f, 0f);
+        public static readonly Vector3 BlueprintSlotPosition = new Vector3(0f, -100f, 0f);
 
         public Equipment equipment;
         public ChildObjectIdentifier root;
@@ -29,45 +33,23 @@ namespace AutomationAge.Systems.Blueprint
             Equipment.slotMapping[PrinterAnySlot] = anyEquipmentType;
         }
 
-        public static void CreateEquipmentSlots(uGUI_PDA pda)
+        public static void CreateEquipmentSlots(GameObject slotClone)
         {
             if (blueprintEquipmentGO != null) { return; }
 
-            // what do
+            blueprintEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
+            blueprintEquipmentGO.name = PrinterBlueprintSlot;
+            blueprintEquipmentGO.transform.localPosition = BlueprintSlotPosition;
 
-            /*
-            Transform parent = pda.transform.Find("Content/InventoryTab/Equipment");
-            uGUI_InventoryTab tab = pda.tabInventory as uGUI_InventoryTab;
-            uGUI_EquipmentSlot slot = tab.equipment.allSlots["Head"];
+            anyEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
+            anyEquipmentGO.name = PrinterAnySlot;
+            anyEquipmentGO.transform.localPosition = AnySlotPosition;
 
-            blueprintEquipmentGO = new GameObject(PrinterBlueprintSlot);
-            anyEquipmentGO = new GameObject(PrinterAnySlot);
-
-            blueprintEquipmentGO.transform.SetParent(parent);
-            anyEquipmentGO.transform.SetParent(parent);
-
-            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.AddComponent<uGUI_EquipmentSlot>();
-            uGUI_EquipmentSlot anySlot = anyEquipmentGO.AddComponent<uGUI_EquipmentSlot>();
-
-            blueprintSlot.background = slot.background;
-            anySlot.background = slot.background;
+            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
+            uGUI_EquipmentSlot anySlot = anyEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
 
             blueprintSlot.slot = PrinterBlueprintSlot;
             anySlot.slot = PrinterAnySlot;
-            */
-
-            /*
-            Transform parent = pda.Find("Content/InventoryTab/Equipment");
-
-            blueprintEquipmentGO.transform.SetParent(parent);
-            anyEquipmentGO.transform.SetParent(parent);
-
-            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.AddComponent<uGUI_EquipmentSlot>();
-            uGUI_EquipmentSlot anySlot = anyEquipmentGO.AddComponent<uGUI_EquipmentSlot>();
-
-            blueprintSlot.slot = PrinterBlueprintSlot;
-            anySlot.slot = PrinterAnySlot;
-            */
         }
 
         public static EquipmentType GetBlueprintEquipment()
@@ -108,19 +90,7 @@ namespace AutomationAge.Systems.Blueprint
         {
             if (!CheckItemExistence()) { return; }
 
-            InventoryItem item = equipment.RemoveItem(PrinterAnySlot, true, false);
-            InventoryItem blueprint = equipment.GetItemInSlot(PrinterBlueprintSlot);
-            GameObject blueprintObj = blueprint.item.gameObject;
-            if (!blueprintObj.TryGetComponent(out BlueprintIdentifier identifier))
-            {
-                Plugin.Logger.LogWarning("Blueprint does not have BlueprintIdentifier component??");
-                equipment.RemoveItem(PrinterBlueprintSlot, true, false);
-                Destroy(blueprintObj);
-                return;
-            }
-            
-            identifier.SetTech(item.techType);
-            Destroy(item.item.gameObject);
+            CoroutineHost.StartCoroutine(TransferDataToBlueprint());
         }
 
         public bool CheckItemExistence()
@@ -128,9 +98,42 @@ namespace AutomationAge.Systems.Blueprint
             return equipment.GetItemInSlot(PrinterBlueprintSlot) != null && equipment.GetItemInSlot(PrinterAnySlot) != null;
         }
 
+        public IEnumerator TransferDataToBlueprint()
+        {
+            InventoryItem item = equipment.GetItemInSlot(PrinterAnySlot);
+            InventoryItem blueprint = equipment.GetItemInSlot(PrinterBlueprintSlot);
+            GameObject blueprintObj = blueprint.item.gameObject;
+
+            if (!blueprintObj.TryGetComponent(out BlueprintIdentifier identifier))
+            {
+                Plugin.Logger.LogWarning("Blueprint does not have BlueprintIdentifier component??");
+                RemoveItem(PrinterBlueprintSlot);
+                yield break;
+            }
+
+            SetData(identifier, item);
+        }
+
+        public void SetData(BlueprintIdentifier identifier, InventoryItem item)
+        {
+            if (identifier.GetTech() == item.techType)
+            {
+                // do nothing if it would result in no change, so as to not waste items
+                return;
+            }
+
+            identifier.SetTech(item.techType);
+            RemoveItem(PrinterAnySlot);
+        }
+
+        public void RemoveItem(string slot)
+        {
+            Destroy(equipment.RemoveItem(slot, true, false).item.gameObject);
+        }
+
         public bool GetCompatibleSlot(EquipmentType type, out string slot)
         {
-            if (type == GetBlueprintEquipment())
+            if (type == blueprintEquipmentType)
             {
                 slot = PrinterBlueprintSlot;
                 return true;

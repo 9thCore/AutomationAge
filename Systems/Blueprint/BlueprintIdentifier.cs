@@ -1,5 +1,4 @@
-﻿using Nautilus.Handlers;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace AutomationAge.Systems.Blueprint
 {
@@ -13,11 +12,6 @@ namespace AutomationAge.Systems.Blueprint
         private PrefabIdentifier identifier;
         private BlueprintSaveData saveData;
         private uGUI_ItemIcon overlayIcon;
-
-        public void DebugUpdateSprite()
-        {
-            UpdateSprite(overlayIcon, saveData.CopiedType);
-        }
 
         public void LoadSaveIfRequired()
         {
@@ -59,8 +53,19 @@ namespace AutomationAge.Systems.Blueprint
                 return;
             }
 
+            AddOverlay(manager, icon);
+        }
+
+        public void AddOverlay(uGUI_IIconManager manager, uGUI_ItemIcon icon, bool equipment = false)
+        {
             overlayIcon = CreateOverlay(manager, icon);
             UpdateSprite(overlayIcon, saveData.CopiedType);
+
+            if (equipment)
+            {
+                overlayIcon.transform.localScale *= 2f;
+                overlayIcon.transform.localPosition = Vector3.zero;
+            }
         }
 
         public static uGUI_ItemIcon CreateOverlay(uGUI_IIconManager manager, uGUI_ItemIcon icon)
@@ -89,7 +94,6 @@ namespace AutomationAge.Systems.Blueprint
             Destroy(overlayIcon.gameObject);
             overlayIcon = null;
         }
-
         public bool HasOverlay()
         {
             return overlayIcon != null;
