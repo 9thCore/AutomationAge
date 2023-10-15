@@ -31,7 +31,7 @@ namespace AutomationAge.Items
                 .WithFabricatorType(CraftTree.Type.Fabricator);
 
             prefab.SetPdaGroupCategory(TechGroup.Personal, TechCategory.Equipment);
-            prefab.SetEquipment(BlueprintIdentifier.GetEquipmentType());
+            prefab.SetEquipment(BlueprintEncoder.GetBlueprintEquipment());
 
             prefab.Register();
         }

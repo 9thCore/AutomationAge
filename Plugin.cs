@@ -40,6 +40,7 @@ namespace AutomationAge
             RockDriller.Register();
             AutoFabricator.Register();
             ItemBlueprint.Register();
+            BlueprintImprinter.Register();
 
             LanguageHandler.RegisterLocalizationFolder("Language");
         }

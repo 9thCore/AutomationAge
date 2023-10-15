@@ -7,21 +7,12 @@ namespace AutomationAge.Systems.Blueprint
     {
         public const float OverlayAlpha = 0.5f;
         public static readonly Vector3 HalfVector = new Vector3(0.5f, 0.5f);
-        public const string EquipmentTypeName = "ItemBlueprint";
         public const string OverlayIconName = "OverlayIcon";
 
         private Pickupable pickupable;
         private PrefabIdentifier identifier;
         private BlueprintSaveData saveData;
         private uGUI_ItemIcon overlayIcon;
-
-        private static EquipmentType equipmentType = EquipmentType.None;
-        public static EquipmentType GetEquipmentType()
-        {
-            if (equipmentType != EquipmentType.None) { return equipmentType; }
-            equipmentType = EnumHandler.AddEntry<EquipmentType>(EquipmentTypeName);
-            return equipmentType;
-        }
 
         public void DebugUpdateSprite()
         {

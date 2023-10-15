@@ -96,12 +96,19 @@ namespace AutomationAge.Systems.Blueprint
 
         [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStop))]
         [HarmonyPrefix]
-        public static void DragStopPostfix()
+        public static void DragStopPrefix()
         {
             if (draggedItemOverlay == null) { return; }
 
             UnityEngine.Object.Destroy(draggedItemOverlay.gameObject);
             draggedItemOverlay = null;
+        }
+
+        [HarmonyPatch(typeof(uGUI_PDA), nameof(uGUI_PDA.Start))]
+        [HarmonyPostfix]
+        public static void PDAStartPostfix(uGUI_PDA __instance)
+        {
+            BlueprintEncoder.CreateEquipmentSlots(__instance);
         }
     }
 }
