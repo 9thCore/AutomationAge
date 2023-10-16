@@ -18,6 +18,8 @@ namespace AutomationAge.Systems.Blueprint
 
         public Equipment equipment;
         public ChildObjectIdentifier root;
+        public PrefabIdentifier identifier;
+        public BlueprintEncoderSaveData saveData;
 
         public static EquipmentType blueprintEquipmentType = EquipmentType.None;
         public static EquipmentType anyEquipmentType = EquipmentType.None;
@@ -64,6 +66,7 @@ namespace AutomationAge.Systems.Blueprint
         public void Start()
         {
             root = gameObject.FindChild(BlueprintImprinter.ItemRootName).GetComponent<ChildObjectIdentifier>();
+            identifier = gameObject.GetComponent<PrefabIdentifier>();
 
             equipment = new Equipment(gameObject, root.transform);
             equipment.SetLabel(BlueprintEncoderLabel);
@@ -71,9 +74,29 @@ namespace AutomationAge.Systems.Blueprint
             equipment.isAllowedToRemove = new IsAllowedToRemove(IsAllowedToRemove);
             equipment.compatibleSlotDelegate = new Equipment.DelegateGetCompatibleSlot(GetCompatibleSlot);
             equipment.onEquip += OnEquip;
+            equipment.onUnequip += OnUnequip;
 
             equipment.AddSlot(PrinterBlueprintSlot);
             equipment.AddSlot(PrinterAnySlot);
+
+            if (!Load())
+            {
+                saveData = new BlueprintEncoderSaveData();
+                saveData.encoder = this;
+                Save();
+            }
+
+            if (saveData.Operating)
+            {
+                if (!CheckItemExistence())
+                {
+                    saveData.Operating = false;
+                    saveData.OperationElapsed = 0f;
+                    return;
+                }
+
+                CoroutineHost.StartCoroutine(TransferDataToBlueprint());
+            }
         }
 
         public bool IsAllowedToAdd(Pickupable pickupable, bool verbose)
@@ -83,14 +106,28 @@ namespace AutomationAge.Systems.Blueprint
 
         public bool IsAllowedToRemove(Pickupable pickupable, bool verbose)
         {
-            return true;
+            return !saveData.Operating;
         }
 
-        public void OnEquip(string slot, InventoryItem _)
+        public void OnEquip(string slot, InventoryItem item)
         {
-            if (!CheckItemExistence()) { return; }
+            if (slot == PrinterAnySlot)
+            {
 
-            CoroutineHost.StartCoroutine(TransferDataToBlueprint());
+            }
+
+            if (CheckItemExistence())
+            {
+                CoroutineHost.StartCoroutine(TransferDataToBlueprint());
+            }
+        }
+
+        public void OnUnequip(string slot, InventoryItem _)
+        {
+            if (slot == PrinterAnySlot)
+            {
+
+            }
         }
 
         public bool CheckItemExistence()
@@ -111,7 +148,23 @@ namespace AutomationAge.Systems.Blueprint
                 yield break;
             }
 
+            saveData.OperationDuration = CalculateDuration();
+            saveData.Operating = true;
+
+            while (saveData.OperationElapsed < saveData.OperationDuration)
+            {
+                saveData.OperationElapsed += Time.deltaTime;
+                yield return null;
+            }
+
             SetData(identifier, item);
+            saveData.OperationElapsed = 0f;
+            saveData.Operating = false;
+        }
+
+        public static float CalculateDuration()
+        {
+            return 8f;
         }
 
         public void SetData(BlueprintIdentifier identifier, InventoryItem item)
@@ -143,8 +196,19 @@ namespace AutomationAge.Systems.Blueprint
             return true;
         }
 
+        public bool IsEmpty()
+        {
+            return equipment.GetTechTypeInSlot(PrinterBlueprintSlot) == TechType.None && equipment.GetTechTypeInSlot(PrinterAnySlot) == TechType.None;
+        }
+
         public bool CanDeconstruct(out string reason)
         {
+            if (!IsEmpty())
+            {
+                reason = StorageContainer.deconstructNonEmptyMessage;
+                return false;
+            }
+
             reason = "";
             return true;
         }
@@ -159,6 +223,14 @@ namespace AutomationAge.Systems.Blueprint
             
         }
 
+        public void OnDestroy()
+        {
+            if (gameObject.TryGetComponent(out Constructable c) && c.constructedAmount <= 0f)
+            {
+                Unsave();
+            }
+        }
+
         public void OnHandHover(GUIHand hand)
         {
             HandReticle.main.SetText(HandReticle.TextType.Hand, BlueprintEncoderUse, true, GameInput.Button.LeftHand);
@@ -170,6 +242,26 @@ namespace AutomationAge.Systems.Blueprint
         {
             Inventory.main.SetUsedStorage(equipment, false);
             Player.main.GetPDA().Open(PDATab.Inventory, transform, null);
+        }
+
+        public bool Load()
+        {
+            if (SaveHandler.data.blueprintEncoderSaveData.TryGetValue(identifier.Id, out saveData))
+            {
+                saveData.encoder = this;
+                return true;
+            }
+            return false;
+        }
+
+        public void Save()
+        {
+            SaveHandler.data.blueprintEncoderSaveData[identifier.Id] = saveData;
+        }
+
+        public void Unsave()
+        {
+            SaveHandler.data.blueprintEncoderSaveData.Remove(identifier.Id);
         }
     }
 }
