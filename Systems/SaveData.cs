@@ -18,6 +18,7 @@ namespace AutomationAge.Systems
         public Dictionary<string, MinerSaveData> minerSaveData = new Dictionary<string, MinerSaveData>();
         public Dictionary<string, CrafterSaveData> crafterSaveData = new Dictionary<string, CrafterSaveData>();
         public Dictionary<string, BlueprintSaveData> blueprintSaveData = new Dictionary<string, BlueprintSaveData>();
+        public Dictionary<string, BlueprintEncoderSaveData> blueprintEncoderSaveData = new Dictionary<string, BlueprintEncoderSaveData>();
     }
 
     internal class CatchUpSaveData
@@ -86,6 +87,16 @@ namespace AutomationAge.Systems
         internal BlueprintIdentifier identifier;
 
         public TechType CopiedType = TechType.None;
+    }
+
+    internal class BlueprintEncoderSaveData
+    {
+        [JsonIgnore]
+        internal BlueprintEncoder encoder;
+
+        public bool Operating = false;
+        public float OperationDuration = 0f;
+        public float OperationElapsed = 0f;
     }
 
     internal static class SaveHandler
