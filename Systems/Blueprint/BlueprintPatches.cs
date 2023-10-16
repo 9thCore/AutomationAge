@@ -140,9 +140,9 @@ namespace AutomationAge.Systems.Blueprint
 
         [HarmonyPatch(typeof(Equipment), nameof(Equipment.IsCompatible))]
         [HarmonyPrefix]
-        public static bool IsCompatiblePrefix(EquipmentType slotType, ref bool __result)
+        public static bool IsCompatiblePrefix(EquipmentType itemType, EquipmentType slotType, ref bool __result)
         {
-            if (slotType == BlueprintEncoder.anyEquipmentType)
+            if (itemType != BlueprintEncoder.blueprintEquipmentType && slotType == BlueprintEncoder.anyEquipmentType)
             {
                 __result = true;
                 return false;
