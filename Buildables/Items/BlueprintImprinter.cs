@@ -13,7 +13,7 @@ namespace AutomationAge.Buildables.Items
     {
         public const string ItemRootName = "ItemRoot";
 
-        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("BlueprintImprinter", "Blueprint Imprinter", "Encodes item data into a blueprint that can be used to identify any other item of the same type.")
+        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("BlueprintImprinter", "Blueprint Imprinter", "Fully dematerializes the given item and encodes its molecular data into the blueprint.")
             .WithIcon(SpriteManager.Get(TechType.Workbench));
 
         public static void Register()
