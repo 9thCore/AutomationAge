@@ -77,9 +77,6 @@ namespace AutomationAge.Systems
         public TechType craftType = TechType.None;
         public bool crafting = false;
         public float craftElapsedTime = 0f;
-
-        public int ResultSizeX = 1;
-        public int ResultSizeY = 1;
     }
 
     internal class BlueprintSaveData
