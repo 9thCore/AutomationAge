@@ -12,6 +12,7 @@ namespace AutomationAge.Buildables.Items
     internal class BlueprintImprinter
     {
         public const string ItemRootName = "ItemRoot";
+        public const string ScreenName = "Screen";
 
         public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("BlueprintImprinter", "Blueprint Imprinter", "Fully dematerializes the given item and encodes its molecular data into the blueprint.")
             .WithIcon(SpriteManager.Get(TechType.Workbench));

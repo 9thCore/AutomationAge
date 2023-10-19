@@ -2,6 +2,7 @@
 using Nautilus.Handlers;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using UWE;
 
 namespace AutomationAge.Systems.Blueprint
@@ -20,6 +21,9 @@ namespace AutomationAge.Systems.Blueprint
         public ChildObjectIdentifier root;
         public PrefabIdentifier identifier;
         public BlueprintEncoderSaveData saveData;
+        public GameObject screen;
+        public Image screenBackground;
+        public uGUI_ItemIcon screenIcon;
 
         public static EquipmentType blueprintEquipmentType = EquipmentType.None;
         public static EquipmentType anyEquipmentType = EquipmentType.None;
@@ -67,6 +71,11 @@ namespace AutomationAge.Systems.Blueprint
         {
             root = gameObject.FindChild(BlueprintImprinter.ItemRootName).GetComponent<ChildObjectIdentifier>();
             identifier = gameObject.GetComponent<PrefabIdentifier>();
+            screen = gameObject.FindChild(BlueprintImprinter.ScreenName);
+
+            screenBackground = screen.FindChild("Background").GetComponent<Image>();
+            screenIcon = screen.FindChild("Icon").GetComponent<uGUI_ItemIcon>();
+            screenIcon.SetForegroundSize(0.375f, 0.375f, true);
 
             equipment = new Equipment(gameObject, root.transform);
             equipment.SetLabel(BlueprintEncoderLabel);
@@ -78,7 +87,7 @@ namespace AutomationAge.Systems.Blueprint
 
             equipment.AddSlot(PrinterBlueprintSlot);
             equipment.AddSlot(PrinterAnySlot);
-
+            
             if (!Load())
             {
                 saveData = new BlueprintEncoderSaveData();
@@ -113,7 +122,8 @@ namespace AutomationAge.Systems.Blueprint
         {
             if (slot == PrinterAnySlot)
             {
-
+                screenIcon.SetForegroundSprite(SpriteManager.Get(item.techType));
+                screenIcon.SetForegroundAlpha(1f);
             }
 
             if (CheckItemExistence())
@@ -126,7 +136,7 @@ namespace AutomationAge.Systems.Blueprint
         {
             if (slot == PrinterAnySlot)
             {
-
+                screenIcon.SetForegroundAlpha(0f);
             }
         }
 
@@ -164,7 +174,7 @@ namespace AutomationAge.Systems.Blueprint
 
         public static float CalculateDuration()
         {
-            return 8f;
+            return 1f;
         }
 
         public void SetData(BlueprintIdentifier identifier, InventoryItem item)
