@@ -23,7 +23,6 @@ namespace AutomationAge.Systems.AutoCrafting
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
         private CrafterSaveData crafterSaveData;
-        private TechType recipeTech;
 
         public GenericHandTarget equipmentHandTarget;
         public Equipment equipment;
@@ -80,6 +79,11 @@ namespace AutomationAge.Systems.AutoCrafting
             equipmentHandTarget = gameObject.FindChild("BlueprintInput").GetComponent<GenericHandTarget>();
             equipmentHandTarget.onHandClick.AddListener(OpenEquipmentPDA);
             equipmentHandTarget.onHandHover.AddListener(Hover);
+        }
+
+        public InventoryItem RemoveBlueprint()
+        {
+            return equipment.RemoveItem(CrafterBlueprintSlot, true, false);
         }
 
         public static void CreateEquipmentSlots(GameObject slotClone)
@@ -156,16 +160,16 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             if (CanStartCraft())
             {
-                CoroutineHost.StartCoroutine(WaitThenStartCraft(recipeTech));
+                CoroutineHost.StartCoroutine(WaitThenStartCraft());
             }
         }
 
-        public IEnumerator WaitThenStartCraft(TechType type)
+        public IEnumerator WaitThenStartCraft()
         {
             // Wait a frame for the tooltip to go away
             yield return null;
 
-            StartCraft(type);
+            StartCraft();
         }
 
         public void CopyModifiableIngredients()
@@ -193,14 +197,14 @@ namespace AutomationAge.Systems.AutoCrafting
                 Ingredients.Add(ing.techType, ing.amount);
             }
 
-            recipeTech = type;
+            crafterSaveData.craftType = type;
 
             return true;
         }
 
         public void RemoveRecipe()
         {
-            recipeTech = TechType.None;
+            crafterSaveData.craftType = TechType.None;
             Ingredients.Clear();
         }
 
@@ -231,7 +235,7 @@ namespace AutomationAge.Systems.AutoCrafting
             return true;
         }
 
-        public void StartCraft(TechType type)
+        public void StartCraft()
         {
             if (!CheckAndGetIngredients(out List<Pickupable> ingredients)) { return; }
 
@@ -240,14 +244,14 @@ namespace AutomationAge.Systems.AutoCrafting
                 inputContainer.container.RemoveItem(ingredient, true);
                 Destroy(ingredient.gameObject);
             }
-            
-            crafterSaveData.craftType = type;
+
+            crafterSaveData.crafting = true;
             crafterSaveData.craftElapsedTime = 0f;
         }
 
         public void Update()
         {
-            if (crafterSaveData.craftType == TechType.None)
+            if (!crafterSaveData.crafting)
             {
                 return;
             }
@@ -257,7 +261,7 @@ namespace AutomationAge.Systems.AutoCrafting
             {
                 CoroutineHost.StartCoroutine(CreateOutput(crafterSaveData.craftType));
                 crafterSaveData.craftElapsedTime = 0f;
-                crafterSaveData.craftType = TechType.None;
+                crafterSaveData.crafting = false;
             }
         }
 
@@ -290,7 +294,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public bool IsCrafting()
         {
-            return crafterSaveData.craftType != TechType.None;
+            return crafterSaveData.crafting;
         }
 
         public bool HasRoomInOutput(TechType type)

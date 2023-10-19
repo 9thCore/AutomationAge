@@ -75,6 +75,7 @@ namespace AutomationAge.Systems
         internal AutoCrafter crafter;
 
         public TechType craftType = TechType.None;
+        public bool crafting = false;
         public float craftElapsedTime = 0f;
 
         public int ResultSizeX = 1;
