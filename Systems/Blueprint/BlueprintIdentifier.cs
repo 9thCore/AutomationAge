@@ -102,6 +102,7 @@ namespace AutomationAge.Systems.Blueprint
         public static void UpdateSprite(uGUI_ItemIcon overlay, TechType tech)
         {
             if (overlay == null || tech == TechType.None) { return; }
+            overlay.SetForegroundSprite(null);
             overlay.SetForegroundSprite(SpriteManager.Get(tech));
             overlay.SetForegroundAlpha(OverlayAlpha);
         }
