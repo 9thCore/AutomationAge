@@ -32,6 +32,9 @@ namespace AutomationAge.Systems.AutoCrafting
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
         public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
 
+        public const string CrafterBlueprintSlot = "Crafter_BlueprintSlot";
+        public static GameObject blueprintEquipmentGO = null;
+
         public override void OnAttach(GameObject module)
         {
             container = module.GetComponentInChildren<NetworkContainer>();
@@ -72,11 +75,26 @@ namespace AutomationAge.Systems.AutoCrafting
             equipment.onEquip += OnEquip;
             equipment.onUnequip += OnUnequip;
 
-            equipment.AddSlot(BlueprintEncoder.PrinterBlueprintSlot);
+            equipment.AddSlot(CrafterBlueprintSlot);
 
             equipmentHandTarget = gameObject.FindChild("BlueprintInput").GetComponent<GenericHandTarget>();
             equipmentHandTarget.onHandClick.AddListener(OpenEquipmentPDA);
             equipmentHandTarget.onHandHover.AddListener(Hover);
+        }
+
+        public static void CreateEquipmentSlots(GameObject slotClone)
+        {
+            if (blueprintEquipmentGO != null) { return; }
+
+            blueprintEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
+            blueprintEquipmentGO.name = CrafterBlueprintSlot;
+            blueprintEquipmentGO.transform.localPosition = Vector3.zero;
+
+            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
+
+            blueprintSlot.slot = CrafterBlueprintSlot;
+
+            Equipment.slotMapping[CrafterBlueprintSlot] = BlueprintEncoder.blueprintEquipmentType;
         }
 
         public void OpenEquipmentPDA(HandTargetEventData data)
@@ -126,7 +144,7 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             if (itemType == BlueprintEncoder.blueprintEquipmentType)
             {
-                slot = BlueprintEncoder.PrinterBlueprintSlot;
+                slot = CrafterBlueprintSlot;
                 return true;
             }
 

@@ -1,4 +1,5 @@
 ﻿using AutomationAge.Buildables.Items;
+using AutomationAge.Systems.AutoCrafting;
 using Nautilus.Handlers;
 using System.Collections;
 using UnityEngine;
@@ -56,6 +57,8 @@ namespace AutomationAge.Systems.Blueprint
 
             blueprintSlot.slot = PrinterBlueprintSlot;
             anySlot.slot = PrinterAnySlot;
+
+            AutoCrafter.CreateEquipmentSlots(slotClone);
         }
 
         public static EquipmentType GetBlueprintEquipment()
