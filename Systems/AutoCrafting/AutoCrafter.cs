@@ -1,6 +1,6 @@
 ﻿using AutomationAge.Buildables.Items;
 using AutomationAge.Systems.Attach;
-using AutomationAge.Systems.Miner;
+using AutomationAge.Systems.Blueprint;
 using AutomationAge.Systems.Network;
 using System;
 using System.Collections;
@@ -12,6 +12,9 @@ namespace AutomationAge.Systems.AutoCrafting
 {
     internal class AutoCrafter : AttachableModule
     {
+        public const string AutoCrafterLabel = "AutoCrafterLabel";
+        public const string AutoCrafterBlueprintUse = "UseAutoCrafterBlueprint";
+        public const string AutoCrafterBlueprintUseTooltip = "Tooltip_UseAutoCrafterBlueprint";
         public static float DurationMultiplier = 2f;
         public static float CraftDuration = 3f;
 
@@ -20,7 +23,11 @@ namespace AutomationAge.Systems.AutoCrafting
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
         private CrafterSaveData crafterSaveData;
-        private TechType recipeTech; // To-do: change this to an item down the line
+        private TechType recipeTech;
+
+        public GenericHandTarget equipmentHandTarget;
+        public Equipment equipment;
+        public ChildObjectIdentifier blueprintRoot;
 
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
         public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
@@ -37,6 +44,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
             container.crafterAttached = true;
         }
+
         public override void RemoveAttachable()
         {
             if (container == null) { return; }
@@ -54,9 +62,76 @@ namespace AutomationAge.Systems.AutoCrafting
             inputContainer.container.onAddItem += OnInput;
             outputContainer.container.isAllowedToAdd += (_, _) => false;
 
-            SetRecipe(TechType.Battery);
-
             initialised = true;
+
+            blueprintRoot = gameObject.FindChild("BlueprintRoot").GetComponent<ChildObjectIdentifier>();
+            equipment = new Equipment(gameObject, blueprintRoot.transform);
+            equipment.SetLabel(AutoCrafterLabel);
+            equipment.compatibleSlotDelegate = new Equipment.DelegateGetCompatibleSlot(GetCompatibleSlot);
+            equipment.isAllowedToAdd = new IsAllowedToAdd(IsAllowedToAdd);
+            equipment.onEquip += OnEquip;
+            equipment.onUnequip += OnUnequip;
+
+            equipment.AddSlot(BlueprintEncoder.PrinterBlueprintSlot);
+
+            equipmentHandTarget = gameObject.FindChild("BlueprintInput").GetComponent<GenericHandTarget>();
+            equipmentHandTarget.onHandClick.AddListener(OpenEquipmentPDA);
+            equipmentHandTarget.onHandHover.AddListener(Hover);
+        }
+
+        public void OpenEquipmentPDA(HandTargetEventData data)
+        {
+            Inventory.main.SetUsedStorage(equipment, false);
+            Player.main.GetPDA().Open(PDATab.Inventory, blueprintRoot.transform);
+        }
+        
+        public void Hover(HandTargetEventData data)
+        {
+            HandReticle.main.SetText(HandReticle.TextType.Hand, AutoCrafterBlueprintUse, true, GameInput.Button.LeftHand);
+            HandReticle.main.SetText(HandReticle.TextType.HandSubscript, AutoCrafterBlueprintUseTooltip, true, GameInput.Button.None);
+            HandReticle.main.SetIcon(HandReticle.IconType.Hand, 1f);
+        }
+
+        public bool IsAllowedToAdd(Pickupable pickupable, bool verbose)
+        {
+            if (!pickupable.TryGetComponent(out BlueprintIdentifier identifier))
+            {
+                return false;
+            }
+
+            if (identifier.GetTech() == TechType.None)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void OnEquip(string _, InventoryItem item)
+        {
+            if (!item.item.gameObject.TryGetComponent(out BlueprintIdentifier identifier))
+            {
+                return;
+            }
+
+            SetRecipe(identifier.GetTech());
+        }
+        
+        public void OnUnequip(string _, InventoryItem __)
+        {
+            RemoveRecipe();
+        }
+
+        public bool GetCompatibleSlot(EquipmentType itemType, out string slot)
+        {
+            if (itemType == BlueprintEncoder.blueprintEquipmentType)
+            {
+                slot = BlueprintEncoder.PrinterBlueprintSlot;
+                return true;
+            }
+
+            slot = "";
+            return false;
         }
 
         public void OnInput(InventoryItem item)
@@ -103,6 +178,12 @@ namespace AutomationAge.Systems.AutoCrafting
             recipeTech = type;
 
             return true;
+        }
+
+        public void RemoveRecipe()
+        {
+            recipeTech = TechType.None;
+            Ingredients.Clear();
         }
 
         public bool CheckAndGetIngredients(out List<Pickupable> itemsToRemove)
