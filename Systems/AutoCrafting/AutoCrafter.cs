@@ -3,9 +3,12 @@ using AutomationAge.Items;
 using AutomationAge.Systems.Attach;
 using AutomationAge.Systems.Blueprint;
 using AutomationAge.Systems.Network;
+using Nautilus.Crafting;
+using Nautilus.Handlers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UWE;
 
@@ -24,7 +27,6 @@ namespace AutomationAge.Systems.AutoCrafting
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
         private CrafterSaveData crafterSaveData;
-        private InventoryItem removedBlueprint;
 
         public GenericHandTarget equipmentHandTarget;
         public Equipment equipment;
@@ -32,6 +34,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
         public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
+        public List<TechType> ResultItems = new List<TechType>();
 
         public const string CrafterBlueprintSlot = "Crafter_BlueprintSlot";
         public static GameObject blueprintEquipmentGO = null;
@@ -209,21 +212,22 @@ namespace AutomationAge.Systems.AutoCrafting
         public bool SetRecipe(TechType type)
         {
             Ingredients.Clear();
+            crafterSaveData.byproducts.Clear();
 
-            ITechData data = CraftData.Get(type);
+            RecipeData data = CraftDataHandler.GetRecipeData(type);
             if (data == null)
             {
-                Plugin.Logger.LogWarning("Cannot get tech data!");
+                Plugin.Logger.LogWarning("Could not set recipe, as type " + type + " does not have an associated recipe!");
                 return false;
             }
 
-            for(int i = 0; i < data.ingredientCount; i++)
+            foreach (CraftData.Ingredient ingredient in data.Ingredients)
             {
-                IIngredient ing = data.GetIngredient(i);
-                Ingredients.Add(ing.techType, ing.amount);
+                Ingredients.Add(ingredient.techType, ingredient.amount);
             }
 
             crafterSaveData.craftType = type;
+            crafterSaveData.byproducts.AddRange(data.LinkedItems);
 
             TryStartCraft();
 
@@ -284,9 +288,14 @@ namespace AutomationAge.Systems.AutoCrafting
             crafterSaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
             if (HasRoomInOutput(crafterSaveData.craftType) && crafterSaveData.craftElapsedTime >= CraftDuration)
             {
-                CoroutineHost.StartCoroutine(CreateOutput(crafterSaveData.craftType));
                 crafterSaveData.craftElapsedTime = 0f;
                 crafterSaveData.crafting = false;
+
+                CoroutineHost.StartCoroutine(CreateOutput(crafterSaveData.craftType));
+                foreach(TechType byproduct in crafterSaveData.byproducts)
+                {
+                    CoroutineHost.StartCoroutine(CreateOutput(byproduct));
+                }
             }
         }
 
