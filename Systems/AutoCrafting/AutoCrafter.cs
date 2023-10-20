@@ -1,4 +1,5 @@
 ﻿using AutomationAge.Buildables.Items;
+using AutomationAge.Items;
 using AutomationAge.Systems.Attach;
 using AutomationAge.Systems.Blueprint;
 using AutomationAge.Systems.Network;
@@ -23,6 +24,7 @@ namespace AutomationAge.Systems.AutoCrafting
         private StorageContainer inputContainer;
         private StorageContainer outputContainer;
         private CrafterSaveData crafterSaveData;
+        private InventoryItem removedBlueprint;
 
         public GenericHandTarget equipmentHandTarget;
         public Equipment equipment;
@@ -79,13 +81,13 @@ namespace AutomationAge.Systems.AutoCrafting
             equipmentHandTarget = gameObject.FindChild("BlueprintInput").GetComponent<GenericHandTarget>();
             equipmentHandTarget.onHandClick.AddListener(OpenEquipmentPDA);
             equipmentHandTarget.onHandHover.AddListener(Hover);
-        }
 
-        public InventoryItem RemoveBlueprint()
-        {
-            return equipment.RemoveItem(CrafterBlueprintSlot, true, false);
+            if (crafterSaveData.craftType != TechType.None)
+            {
+                CoroutineHost.StartCoroutine(CreateBlueprint(crafterSaveData.craftType));
+            }
         }
-
+        
         public static void CreateEquipmentSlots(GameObject slotClone)
         {
             if (blueprintEquipmentGO != null) { return; }
@@ -106,7 +108,24 @@ namespace AutomationAge.Systems.AutoCrafting
             Inventory.main.SetUsedStorage(equipment, false);
             Player.main.GetPDA().Open(PDATab.Inventory, blueprintRoot.transform);
         }
-        
+
+        public IEnumerator CreateBlueprint(TechType type)
+        {
+            TaskResult<GameObject> task = new TaskResult<GameObject>();
+            yield return CraftData.InstantiateFromPrefabAsync(ItemBlueprint.Info.TechType, task, false);
+
+            GameObject obj = task.Get();
+            obj.SetActive(false);
+
+            BlueprintIdentifier identifier = obj.GetComponent<BlueprintIdentifier>();
+            identifier.SetTech(type);
+
+            Pickupable pickupable = obj.GetComponent<Pickupable>();
+            InventoryItem item = new InventoryItem(pickupable);
+
+            equipment.AddItem(CrafterBlueprintSlot, item, true);
+        }
+
         public void Hover(HandTargetEventData data)
         {
             HandReticle.main.SetText(HandReticle.TextType.Hand, AutoCrafterBlueprintUse, true, GameInput.Button.LeftHand);
@@ -137,6 +156,7 @@ namespace AutomationAge.Systems.AutoCrafting
             }
 
             SetRecipe(identifier.GetTech());
+            item.item.transform.parent = null;
         }
         
         public void OnUnequip(string _, InventoryItem __)
@@ -157,6 +177,11 @@ namespace AutomationAge.Systems.AutoCrafting
         }
 
         public void OnInput(InventoryItem item)
+        {
+            TryStartCraft();
+        }
+
+        public void TryStartCraft()
         {
             if (CanStartCraft())
             {
@@ -183,6 +208,8 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public bool SetRecipe(TechType type)
         {
+            Ingredients.Clear();
+
             ITechData data = CraftData.Get(type);
             if (data == null)
             {
@@ -190,7 +217,6 @@ namespace AutomationAge.Systems.AutoCrafting
                 return false;
             }
 
-            Ingredients.Clear();
             for(int i = 0; i < data.ingredientCount; i++)
             {
                 IIngredient ing = data.GetIngredient(i);
@@ -198,6 +224,8 @@ namespace AutomationAge.Systems.AutoCrafting
             }
 
             crafterSaveData.craftType = type;
+
+            TryStartCraft();
 
             return true;
         }
@@ -251,10 +279,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public void Update()
         {
-            if (!crafterSaveData.crafting)
-            {
-                return;
-            }
+            if (!crafterSaveData.crafting) { return; }
 
             crafterSaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
             if (HasRoomInOutput(crafterSaveData.craftType) && crafterSaveData.craftElapsedTime >= CraftDuration)
@@ -271,6 +296,8 @@ namespace AutomationAge.Systems.AutoCrafting
             yield return CraftData.InstantiateFromPrefabAsync(type, result);
 
             GameObject go = result.Get();
+            go.SetActive(false);
+
             Pickupable pickupable = go.GetComponent<Pickupable>();
 
             if (pickupable == null)
@@ -284,12 +311,17 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public bool CanStartCraft()
         {
-            return HasPower() && !IsCrafting();
+            return HasPower() && HasRecipe() && !IsCrafting();
         }
 
         public bool HasPower()
         {
             return true;
+        }
+
+        public bool HasRecipe()
+        {
+            return crafterSaveData.craftType != TechType.None;
         }
 
         public bool IsCrafting()
@@ -339,6 +371,18 @@ namespace AutomationAge.Systems.AutoCrafting
         public override void OnUnsave(string id)
         {
             SaveHandler.data.crafterSaveData.Remove(id);
+        }
+
+        public override bool CanDeconstruct(out string reason)
+        {
+            if (equipment.GetItemInSlot(CrafterBlueprintSlot) != null)
+            {
+                reason = StorageContainer.deconstructNonEmptyMessage;
+                return false;
+            }
+
+            reason = "";
+            return true;
         }
     }
 }
