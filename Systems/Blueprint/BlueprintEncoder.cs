@@ -98,6 +98,20 @@ namespace AutomationAge.Systems.Blueprint
                 Save();
             }
 
+            // Add items to slots after load
+            foreach(Pickupable pickupable in root.GetAllComponentsInChildren<Pickupable>())
+            {
+                InventoryItem item = new InventoryItem(pickupable);
+
+                if (pickupable.TryGetComponent(out BlueprintIdentifier _))
+                {
+                    equipment.AddItem(PrinterBlueprintSlot, item, true);
+                } else
+                {
+                    equipment.AddItem(PrinterAnySlot, item, true);
+                }
+            }
+
             if (saveData.Operating)
             {
                 if (!CheckItemExistence())
