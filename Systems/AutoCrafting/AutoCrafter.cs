@@ -227,6 +227,7 @@ namespace AutomationAge.Systems.AutoCrafting
             }
 
             crafterSaveData.craftType = type;
+            crafterSaveData.byproducts.AddRange(Enumerable.Repeat(type, data.craftAmount - 1)); // We're already including the first item
             crafterSaveData.byproducts.AddRange(data.LinkedItems);
 
             TryStartCraft();
