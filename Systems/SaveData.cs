@@ -78,6 +78,7 @@ namespace AutomationAge.Systems
         public List<TechType> byproducts = new List<TechType>();
         public bool crafting = false;
         public float craftElapsedTime = 0f;
+        public float craftDuration = 0f;
     }
 
     internal class BlueprintSaveData

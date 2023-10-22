@@ -20,7 +20,7 @@ namespace AutomationAge.Systems.AutoCrafting
         public const string AutoCrafterBlueprintUse = "UseAutoCrafterBlueprint";
         public const string AutoCrafterBlueprintUseTooltip = "Tooltip_UseAutoCrafterBlueprint";
         public static float DurationMultiplier = 2f;
-        public static float CraftDuration = 3f;
+        public static float DefaultCraftDuration = 2.7f;
 
         private NetworkContainer container;
         private bool initialised = false;
@@ -230,6 +230,11 @@ namespace AutomationAge.Systems.AutoCrafting
             crafterSaveData.byproducts.AddRange(Enumerable.Repeat(type, data.craftAmount - 1)); // We're already including the first item
             crafterSaveData.byproducts.AddRange(data.LinkedItems);
 
+            if (!CraftData.GetCraftTime(type, out crafterSaveData.craftDuration))
+            {
+                crafterSaveData.craftDuration = DefaultCraftDuration;
+            }
+
             TryStartCraft();
 
             return true;
@@ -287,7 +292,7 @@ namespace AutomationAge.Systems.AutoCrafting
             if (!crafterSaveData.crafting) { return; }
 
             crafterSaveData.craftElapsedTime += Time.deltaTime / DurationMultiplier;
-            if (HasRoomInOutput(crafterSaveData.craftType) && crafterSaveData.craftElapsedTime >= CraftDuration)
+            if (HasRoomInOutput(crafterSaveData.craftType) && crafterSaveData.craftElapsedTime >= crafterSaveData.craftDuration)
             {
                 crafterSaveData.craftElapsedTime = 0f;
                 crafterSaveData.crafting = false;
