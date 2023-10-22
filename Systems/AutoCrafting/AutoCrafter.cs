@@ -34,7 +34,6 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public Dictionary<TechType, int> Ingredients = new Dictionary<TechType, int>();
         public Dictionary<TechType, int> IngredientsModifiable = new Dictionary<TechType, int>();
-        public List<TechType> ResultItems = new List<TechType>();
 
         public const string CrafterBlueprintSlot = "Crafter_BlueprintSlot";
         public static GameObject blueprintEquipmentGO = null;
