@@ -101,6 +101,14 @@ namespace AutomationAge.Systems.Blueprint
             blueprint.RemoveOverlay();
         }
 
+        [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.Awake))]
+        [HarmonyPostfix]
+        public static void ItemDragManagerAwakePostfix()
+        {
+            draggedItemOverlay = BlueprintIdentifier.CreateOverlay(null, ItemDragManager.instance.draggedIcon);
+            draggedItemOverlay.transform.localPosition = Vector3.zero;
+        }
+
         [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStart))]
         [HarmonyPostfix]
         public static void DragStartPostfix(InventoryItem item)
@@ -109,19 +117,14 @@ namespace AutomationAge.Systems.Blueprint
             if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
             if (blueprint.GetTech() == TechType.None) { return; }
 
-            draggedItemOverlay = BlueprintIdentifier.CreateOverlay(null, ItemDragManager.instance.draggedIcon);
-            draggedItemOverlay.transform.localPosition = Vector3.zero;
             BlueprintIdentifier.UpdateSprite(draggedItemOverlay, blueprint.GetTech());
         }
 
-        [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.DragStop))]
-        [HarmonyPrefix]
-        public static void DragStopPrefix()
+        [HarmonyPatch(typeof(ItemDragManager), nameof(ItemDragManager.UpdateIconTransform))]
+        [HarmonyPostfix]
+        public static void UpdateIconTransformPostfix()
         {
-            if (draggedItemOverlay == null) { return; }
-
-            UnityEngine.Object.Destroy(draggedItemOverlay.gameObject);
-            draggedItemOverlay = null;
+            draggedItemOverlay.SetForegroundSize(2f * ItemDragManager.instance.draggedIcon.foregroundSize);
         }
 
         [HarmonyPatch(typeof(uGUI_Equipment), nameof(uGUI_Equipment.Awake))]
