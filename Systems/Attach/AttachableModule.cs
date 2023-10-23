@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace AutomationAge.Systems.Attach
@@ -27,7 +26,7 @@ namespace AutomationAge.Systems.Attach
                         _saveData = new AttachableSaveData();
                         _saveData.attachedID = string.Empty;
                         _saveData.attachedPos = Vector3.zero;
-                        _saveData.fullyConstructed = Constructable.constructed;
+                        _saveData.fullyConstructed = constructable.constructed;
 
                         string id = gameObject.GetComponent<PrefabIdentifier>().Id;
                         OnCreateSave(id);
@@ -39,21 +38,10 @@ namespace AutomationAge.Systems.Attach
             }
         }
 
-        internal Constructable _constructable;
-        internal Constructable Constructable => _constructable ??= gameObject.GetComponent<Constructable>();
+        internal Constructable constructable;
 
-        internal GameObject _moduleAttachedTo;
-        internal GameObject ModuleAttachedTo
-        {
-            get
-            {
-                if (_moduleAttachedTo == null)
-                {
-                    LateAttach();
-                }
-                return _moduleAttachedTo;
-            }
-        }
+        internal GameObject moduleAttachedTo;
+        internal bool attached = false;
 
         public virtual void OnAttach(GameObject module) { }
         public virtual void RemoveAttachable() { }
@@ -71,13 +59,13 @@ namespace AutomationAge.Systems.Attach
 
         public void OnEnable()
         {
-            if (_moduleAttachedTo == null) { return; }
+            if (!attached) { return; }
             StartBehaviour();
         }
 
         public void OnDisable()
         {
-            if (_moduleAttachedTo == null) { return; }
+            if (!attached) { return; }
             StopBehaviour();
         }
 
@@ -93,7 +81,9 @@ namespace AutomationAge.Systems.Attach
                 throw new ArgumentException($"Attached module {module} does not have a PrefabIdentifier!");
             }
 
-            _moduleAttachedTo = module;
+            constructable = gameObject.GetComponent<Constructable>();
+            moduleAttachedTo = module;
+            attached = true;
 
             SaveData.attachedID = identifier.Id;
             SaveData.attachedPos = module.transform.position;
@@ -113,7 +103,7 @@ namespace AutomationAge.Systems.Attach
 
         public void OnDestroy()
         {
-            if (Constructable.constructedAmount <= 0f)
+            if (constructable.constructedAmount <= 0f)
             {
                 RemoveAttachable();
                 Unsave();
@@ -122,8 +112,10 @@ namespace AutomationAge.Systems.Attach
 
         public virtual void Start()
         {
-            // Force attach if we haven't already
-            if (ModuleAttachedTo == null) { return; }
+            if (!attached)
+            {
+                LateAttach();
+            }
         }
 
         public void Awake()
@@ -132,7 +124,7 @@ namespace AutomationAge.Systems.Attach
             GameObject module = ConstructableOnSpecificModules.attachedModule;
             if (module == null)
             {
-                // If not, wait to attach lazily after
+                // If not, wait to attach in Start
                 return;
             }
 

@@ -7,7 +7,7 @@ namespace AutomationAge.Systems.Network
     {
 
         private NetworkContainer _container;
-        internal NetworkContainer Container => _container ??= ModuleAttachedTo?.GetComponent<NetworkContainer>();
+        internal NetworkContainer Container => _container ??= moduleAttachedTo?.GetComponent<NetworkContainer>();
 
         public GameObject PrefabRoot = null;
 
@@ -16,7 +16,7 @@ namespace AutomationAge.Systems.Network
 
         public override void Start()
         {
-            if (PrefabRoot != null)
+            if (PrefabRoot == null)
             {
                 PrefabRoot = gameObject;
             }

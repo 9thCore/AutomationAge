@@ -63,7 +63,7 @@ namespace AutomationAge.Systems.AutoCrafting
             base.Start();
 
             inputContainer = gameObject.FindChild(AutoFabricator.InputContainerName).GetComponent<StorageContainer>();
-            outputContainer = ModuleAttachedTo.GetComponentInChildren<StorageContainer>();
+            outputContainer = moduleAttachedTo.GetComponentInChildren<StorageContainer>();
 
             inputContainer.container.onAddItem += OnInput;
             outputContainer.container.isAllowedToAdd += (_, _) => false;

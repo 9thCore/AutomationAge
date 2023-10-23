@@ -16,7 +16,7 @@ namespace AutomationAge.Systems.Miner
         public readonly Quaternion HitFXRotation = Quaternion.Euler(new Vector3(270f, 0f, 0f));
 
         private BaseMiner _miner;
-        public BaseMiner Miner => _miner ??= ModuleAttachedTo?.GetComponent<BaseMiner>();
+        public BaseMiner Miner => _miner ??= moduleAttachedTo?.GetComponent<BaseMiner>();
 
         private StorageContainer _storage;
         public StorageContainer Storage => _storage ??= Container.GetComponent<StorageContainer>();
