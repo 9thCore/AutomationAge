@@ -76,28 +76,28 @@ namespace AutomationAge.Systems.Network.Item
         public void Request()
         {
             // Request one of each at the same time
-            foreach (InventoryItem item in Filter.GetItems())
+            foreach (TechType type in Filter.GetItems())
             {
                 // We do not have enough power to search and request, so stop looking to avoid running out
                 if (GameModeUtils.RequiresPower() && !consumer.HasPower(SearchPowerConsumption + RequestPowerConsumption)) { break; }
 
-                Pickupable pickupable = item.item;
-
                 // Don't bother searching if we can't put it in anyway
-                if (!Container.HasRoomFor(pickupable) || !Container.AllowedToAdd(pickupable)) { continue; }
+                if (!Container.HasRoomFor(type) || !Container.AllowedToAdd(type)) { continue; }
 
                 // We're looking in the network, so use power even if we don't request anything :)
                 consumer.ConsumePower(SearchPowerConsumption, out float _);
 
-                List<NetworkContainer> containers = Data.GetContainersContaining(pickupable.GetTechType());
+                List<NetworkContainer> containers = Data.GetContainersContaining(type);
                 if (containers == null) { continue; }
 
                 foreach (NetworkContainer networkContainer in containers)
                 {
                     if (networkContainer == Container               // Don't request from itself
-                        || !networkContainer.AllowedToRemove(pickupable)) { continue; }
+                        || !networkContainer.AllowedToRemove(type) ) { continue; }
 
-                    Pickupable removedPickupable = networkContainer.RemoveItem(pickupable.GetTechType());
+                    Pickupable removedPickupable = networkContainer.RemoveItem(type);
+                    if (removedPickupable == null) { continue; }                   // Could not remove, so don't add it
+
                     Container.AddItem(removedPickupable);
 
                     // We requested from container, so consume more power

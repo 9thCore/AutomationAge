@@ -183,18 +183,23 @@ namespace AutomationAge.Systems.Network
 
         public bool Contains(InventoryItem item)
         {
+            return Contains(item.techType);
+        }
+
+        public bool Contains(TechType type)
+        {
             switch (Type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.Contains(item.techType);
+                    return storageContainer.container.Contains(type);
                 case ContainerType.NuclearReactor:
                     foreach (KeyValuePair<string, InventoryItem> pair in nuclearReactor.equipment.equipment)
                     {
-                        if (pair.Value?.techType == item.techType) { return true; }
+                        if (pair.Value?.techType == type) { return true; }
                     }
                     return false;
                 case ContainerType.BioReactor:
-                    return bioReactor.container.Contains(item.techType);
+                    return bioReactor.container.Contains(type);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -202,44 +207,51 @@ namespace AutomationAge.Systems.Network
 
         public bool HasRoomFor(Pickupable pickupable)
         {
+            return HasRoomFor(pickupable.GetTechType());
+        }
+
+        public bool HasRoomFor(TechType type)
+        {
+            Vector2int v = CraftData.GetItemSize(type);
+
             switch (Type)
             {
                 case ContainerType.StorageContainer:
-                    return storageContainer.container.HasRoomFor(pickupable);
+                    return storageContainer.container.HasRoomFor(v.x, v.y);
                 case ContainerType.NuclearReactor:
                     return nuclearReactor.equipment.GetFreeSlot(EquipmentType.NuclearReactor, out string _);
                 case ContainerType.BioReactor:
-                    return bioReactor.container.HasRoomFor(pickupable);
+                    return bioReactor.container.HasRoomFor(v.x, v.y);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public bool AllowedToAdd(Pickupable pickupable)
+        public bool AllowedToAdd(TechType type)
         {
             switch (Type)
             {
                 case ContainerType.StorageContainer:
-                    return ((IItemsContainer)storageContainer.container).AllowedToAdd(pickupable, false);
+                    return storageContainer.container.IsTechTypeAllowed(type);
                 case ContainerType.NuclearReactor:
-                    return nuclearReactor.IsAllowedToAdd(pickupable, false);
+                    return BaseNuclearReactor.charge.ContainsKey(type);
                 case ContainerType.BioReactor:
-                    return ((IItemsContainer)bioReactor.container).AllowedToAdd(pickupable, false);
+                    return bioReactor.container.IsTechTypeAllowed(type);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public bool AllowedToRemove(Pickupable pickupable)
+        public bool AllowedToRemove(TechType type)
         {
             switch (Type)
             {
                 case ContainerType.StorageContainer:
-                    return ((IItemsContainer)storageContainer.container).AllowedToRemove(pickupable, false);
+                    return true;
                 case ContainerType.NuclearReactor:
-                    return nuclearReactor.IsAllowedToRemove(pickupable, false);
+                    return BaseNuclearReactor.charge.ContainsKey(type);
                 case ContainerType.BioReactor:
-                    return ((IItemsContainer)bioReactor.container).AllowedToRemove(pickupable, false);
+                    return false;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

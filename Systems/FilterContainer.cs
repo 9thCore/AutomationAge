@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutomationAge.Systems.Blueprint;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,14 +38,15 @@ namespace AutomationAge.Systems
             _container.isAllowedToAdd += AllowedToAdd;
         }
 
-        public List<InventoryItem> GetItems()
+        public List<TechType> GetItems()
         {
-            List<InventoryItem> items = new List<InventoryItem>();
+            List<TechType> items = new List<TechType>();
             foreach (KeyValuePair<TechType, ItemsContainer.ItemGroup> pair in container._items)
             {
                 foreach(InventoryItem item in pair.Value.items)
                 {
-                    items.Add(item);
+                    TechType type = GetItemTechType(item);
+                    if (type != TechType.None) { items.Add(type); }
                 }
             }
             return items;
@@ -58,7 +60,17 @@ namespace AutomationAge.Systems
 
         public bool AllowedToAdd(Pickupable pickupable, bool verbose)
         {
-            return !container.Contains(pickupable.GetTechType());
+            return !container.Contains(GetItemTechType(pickupable.inventoryItem));
+        }
+
+        private TechType GetItemTechType(InventoryItem item)
+        {
+            if (item.item.TryGetComponent(out BlueprintIdentifier identifier))
+            {
+                return identifier.GetTech();
+            }
+
+            return item.techType;
         }
     }
 }
