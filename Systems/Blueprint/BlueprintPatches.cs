@@ -114,8 +114,11 @@ namespace AutomationAge.Systems.Blueprint
         public static void DragStartPostfix(InventoryItem item)
         {
             GameObject obj = item.item.gameObject;
-            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint)) { return; }
-            if (blueprint.GetTech() == TechType.None) { return; }
+            if (!obj.TryGetComponent(out BlueprintIdentifier blueprint))
+            {
+                draggedItemOverlay.SetForegroundAlpha(0f);
+                return;
+            }
 
             BlueprintIdentifier.UpdateSprite(draggedItemOverlay, blueprint.GetTech());
         }
