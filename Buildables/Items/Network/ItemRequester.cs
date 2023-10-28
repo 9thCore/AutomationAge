@@ -43,7 +43,7 @@ namespace AutomationAge.Buildables.Items.Network
             obj.AddComponent<NetworkItemRequester>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.AllowedOnConstructable | ConstructableFlags.Base | ConstructableFlags.Wall;
-            PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
+            PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Global);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
             MaterialUtils.ApplySNShaders(model);
 

@@ -116,34 +116,8 @@ namespace AutomationAge.Systems.Miner
             }
         }
 
-        public void CatchUp()
-        {
-            if (!SaveData.MustCatchUp()) { return; }
-
-            float difference = Time.time - SaveData.lastActiveTime;
-            int spawns = (int)(difference / (ExtrusionInterval * RockExtrusionTarget));
-
-            if (spawns < 1) { return; }
-
-            if (HasDrillAttachment())
-            {
-                // Limit spawns to driller capacity
-                spawns = System.Math.Min(spawns, RockDriller.Width * RockDriller.Height);
-
-                CoroutineHost.StartCoroutine(CatchUpRockSpawns(spawns));
-            }
-            else
-            {
-                if (spawnedRock != null) { return; }
-                SpawnRandomLoot();
-            }
-        }
-
         public void Update()
         {
-            CatchUp();
-            SaveData.UpdateActiveTime();
-
             if (spawnedRock != null)
             {
                 rockSpawnTimer += Time.deltaTime;
@@ -196,22 +170,6 @@ namespace AutomationAge.Systems.Miner
             TaskResult<GameObject> result = new TaskResult<GameObject>();
             yield return CraftData.InstantiateFromPrefabAsync(SaveData.rockTechType, result, false);
             InitialiseRock(result.Get());
-        }
-
-        public IEnumerator CatchUpRockSpawns(int spawns)
-        {
-            for(int i = 0; i < spawns; i++)
-            {
-                if (!drillAttachment.CanMine()) { yield break; }
-
-                TechType type = BiomeUtils.GetRandomBiomeLoot(Biome);
-                if (type != TechType.None)
-                {
-                    TaskResult<GameObject> result = new TaskResult<GameObject>();
-                    yield return CraftData.InstantiateFromPrefabAsync(type, result, false);
-                    drillAttachment.CatchUp(result.Get());
-                }
-            }
         }
 
         public void PickedUp(Pickupable _)

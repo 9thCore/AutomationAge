@@ -21,32 +21,6 @@ namespace AutomationAge.Systems
         public Dictionary<string, BlueprintEncoderSaveData> blueprintEncoderSaveData = new Dictionary<string, BlueprintEncoderSaveData>();
     }
 
-    internal class CatchUpSaveData
-    {
-        public const int ActiveThreshold = 4;
-
-        [JsonIgnore]
-        public int lastActiveFrame = Time.frameCount;
-        [JsonIgnore]
-        public float lastActiveTime = Time.time;
-
-        public bool MustCatchUp()
-        {
-            if (lastActiveFrame < 0)
-            {
-                return false;
-            }
-
-            return Time.frameCount - lastActiveFrame > ActiveThreshold;
-        }
-
-        public void UpdateActiveTime()
-        {
-            lastActiveFrame = Time.frameCount;
-            lastActiveTime = Time.time;
-        }
-    }
-
     internal class AttachableSaveData
     {
         [JsonIgnore]
@@ -58,7 +32,7 @@ namespace AutomationAge.Systems
         public AttachableModule.SpecialModule specialModule;
     }
 
-    internal class MinerSaveData : CatchUpSaveData
+    internal class MinerSaveData
     {
         [JsonIgnore]
         internal BaseMiner miner;

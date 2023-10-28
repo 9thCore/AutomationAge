@@ -150,20 +150,6 @@ namespace AutomationAge.Systems.Miner
             Miner?.PickedUp();
         }
 
-        public void CatchUp(GameObject rock)
-        {
-            if (rock.TryGetComponent(out BreakableResource chunk))
-            {
-                CoroutineHost.StartCoroutine(GetChunkResources(chunk));
-            } else if (rock.TryGetComponent(out Pickupable pickupable))
-            {
-                PickUpResource(pickupable);
-            } else
-            {
-                Plugin.Logger.LogError($"Cannot catch up with {rock}, as it's neither a breakable resource nor a pickupable!");
-            }
-        }
-
         public IEnumerator BreakChunk(BreakableResource chunk)
         {
             if (!GetWaitTime(out float waitTime)) { yield return new WaitForSeconds(waitTime); }

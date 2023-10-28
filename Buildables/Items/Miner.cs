@@ -36,7 +36,7 @@ namespace AutomationAge.Buildables.Items
             obj.AddComponent<BaseMiner>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.Outside | ConstructableFlags.Ground | ConstructableFlags.Rotatable;
-            PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);
+            PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Global);
             PrefabUtils.AddConstructable(obj, Info.TechType, constructableFlags, model);
             MaterialUtils.ApplySNShaders(model);
 
