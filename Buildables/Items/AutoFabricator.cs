@@ -7,6 +7,7 @@ using Nautilus.Assets.Gadgets;
 using AutomationAge.Systems;
 using AutomationAge.Systems.AutoCrafting;
 using AutomationAge.Systems.Network;
+using AutomationAge.Systems.Attach;
 
 namespace AutomationAge.Buildables.Items
 {
@@ -43,6 +44,33 @@ namespace AutomationAge.Buildables.Items
             inputContainer.AddComponent<NetworkContainerRestriction>().Restrict(interfaceAllowed: false, requesterAllowed: true);
             NetworkContainer c = inputContainer.AddComponent<NetworkContainer>();
             c.PrefabRoot = obj;
+
+            Attachable check = obj.AddComponent<Attachable>();
+            check.CanConstruct = (GameObject input, out GameObject module) =>
+            {
+                NetworkContainer container = input.GetComponentInChildren<NetworkContainer>();
+                if (container != null && container.CrafterAllowed() && !container.crafterAttached)
+                {
+                    module = container.gameObject;
+                    return true;
+                }
+
+                module = null;
+                return false;
+            };
+
+            check.SnappingRule = (GameObject input, ref Vector3 position, ref Quaternion rotation) =>
+            {
+                NetworkContainer container = input.GetComponentInChildren<NetworkContainer>();
+                if (container == null)
+                {
+                    return false;
+                }
+
+                position = container.transform.position + container.transform.up * 1f + container.transform.forward * 0.25f;
+                rotation = container.transform.rotation;
+                return true;
+            };
 
             foreach (UniqueIdentifier uid in obj.GetComponentsInChildren<UniqueIdentifier>())
             {

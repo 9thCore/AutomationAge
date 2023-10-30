@@ -6,6 +6,7 @@ using static CraftData;
 using UnityEngine;
 using Nautilus.Assets.Gadgets;
 using AutomationAge.Systems.Miner;
+using AutomationAge.Systems.Attach;
 
 namespace AutomationAge.Buildables.Items
 {
@@ -44,6 +45,33 @@ namespace AutomationAge.Buildables.Items
             GameObject model = obj.transform.Find(ModelObject).gameObject;
 
             obj.AddComponent<Driller>();
+
+            Attachable check = obj.AddComponent<Attachable>();
+            check.CanConstruct = (GameObject input, out GameObject module) =>
+            {
+                if (input.TryGetComponent(out BaseMiner miner) && !miner.HasDrillAttachment())
+                {
+                    module = input;
+                    return true;
+                }
+
+                module = null;
+                return false;
+            };
+
+            check.SnappingRule = (GameObject input, ref Vector3 position, ref Quaternion rotation) =>
+            {
+                BaseMiner miner = input.GetComponentInChildren<BaseMiner>();
+                if (miner == null)
+                {
+                    return false;
+                }
+
+                position = miner.transform.position + miner.transform.up * 2f;
+                rotation = miner.transform.rotation * Quaternion.Euler(0f, Utility.SnapRotationToCardinal(Builder.additiveRotation / 2f), 0f);
+
+                return true;
+            };
 
             foreach (UniqueIdentifier uid in obj.GetComponentsInChildren<UniqueIdentifier>())
             {

@@ -18,14 +18,17 @@ namespace AutomationAge.Systems.Network
                 || __instance.TryGetComponent(out Planter _)
                 || __instance.GetComponentInParent<Driller>() != null) { return; }
 
-            if (__instance.TryGetComponent(out FiltrationMachine _))
+            if (!__instance.TryGetComponent(out NetworkContainerRestriction _))
             {
-                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false);
-            }
-            else if (!__instance.TryGetComponent(out Aquarium _))
-            {
-                // Basic storage container
-                __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(crafterAllowed: true);
+                if (__instance.TryGetComponent(out FiltrationMachine _))
+                {
+                    __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(requesterAllowed: false);
+                }
+                else if (!__instance.TryGetComponent(out Aquarium _))
+                {
+                    // Basic storage container
+                    __instance.gameObject.AddComponent<NetworkContainerRestriction>().Restrict(crafterAllowed: true);
+                }
             }
 
             NetworkContainer container = __instance.gameObject.EnsureComponent<NetworkContainer>();

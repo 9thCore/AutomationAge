@@ -14,100 +14,7 @@ namespace AutomationAge.Systems.Attach
     [HarmonyPatch]
     internal static class ConstructableOnSpecificModules
     {
-        public class SpecialRuleObject
-        {
-            public Vector3 position;
-            public Quaternion rotation;
-            public bool changed = false;
-
-            public SpecialRuleObject(Vector3 position, Quaternion rotation)
-            {
-                this.position = position;
-                this.rotation = rotation;
-            }
-        }
-
         public const string DeconstructAttachedMessage = "DeconstructAttachedError";
-
-        private static readonly Dictionary<TechType, Func<GameObject, bool>> specialConstructables = new Dictionary<TechType, Func<GameObject, bool>>()
-        {
-            {
-                ItemInterface.Info.TechType,
-                obj => {
-                    if(obj.TryGetComponent(out NetworkContainer container))
-                    {
-                        return !container.interfaceAttached && container.InterfaceAllowed();
-                    }
-
-                    return false;
-                }
-            },
-            {
-                ItemRequester.Info.TechType,
-                obj =>
-                {
-                    if(obj.TryGetComponent(out NetworkContainer container))
-                    {
-                        return !container.requesterAttached && container.RequesterAllowed();
-                    }
-
-                    return false;
-                }
-            },
-            {
-                RockDriller.Info.TechType,
-                obj =>
-                {
-                    if(obj.TryGetComponent(out BaseMiner miner))
-                    {
-                        return !miner.HasDrillAttachment();
-                    }
-
-                    return false;
-                }
-            },
-            {
-                AutoFabricator.Info.TechType,
-                obj =>
-                {
-                    if (obj.TryGetComponent(out NetworkContainer container))
-                    {
-                        return !container.crafterAttached && container.CrafterAllowed();
-                    }
-                    return false;
-                }
-            }
-        };
-
-        // Describes special construction rules, used for snapping a construction to another for instance
-        private static readonly Dictionary<TechType, Action<GameObject, SpecialRuleObject>> specialConstructionRules = new()
-        {
-            {
-                RockDriller.Info.TechType,
-                (go, obj) =>
-                {
-                    if (!go.TryGetComponent(out BaseMiner _)) { return; }
-
-                    obj.position = go.transform.position + go.transform.up * 2f;
-
-                    int snappedAdditiveRotation = (int)(Builder.additiveRotation / 2f) * 90;
-
-                    obj.rotation = go.transform.rotation * Quaternion.Euler(0f, snappedAdditiveRotation, 0f);
-                    obj.changed = true;
-                }
-            },
-            {
-                AutoFabricator.Info.TechType,
-                (go, obj) =>
-                {
-                    if (!go.TryGetComponent(out NetworkContainer _)) { return; }
-
-                    obj.position = go.transform.position + go.transform.up * 1f + go.transform.forward * 0.25f;
-                    obj.rotation = go.transform.rotation;
-                    obj.changed = true;
-                }
-            }
-        };
 
         public static GameObject attachedModule = null;
 
@@ -147,29 +54,33 @@ namespace AutomationAge.Systems.Attach
         public static void CheckAsSubModulePostfix(Collider hitCollider, ref bool __result)
         {
             if (hitCollider == null) { return; }
+            GameObject collider = hitCollider.gameObject;
 
-            TechType type = Builder.lastTechType;
-            if (!specialConstructables.ContainsKey(type)) { return; }
-            Func<GameObject, bool> func = specialConstructables[type];
+            Attachable comp = Utility.GetComponentInHigherHierarchy<Attachable>(Builder.prefab);
+            if (comp == null) { return; }
 
-            Transform tr = hitCollider.transform;
-
-            if (IsSpecialModule(tr.gameObject, out GameObject obj))
+            if (comp.CanConstruct == null)
             {
-                attachedModule = obj;
-                __result = func(obj);
+                UnityEngine.Object.Destroy(comp);
+                throw new InvalidOperationException($"Object {Builder.prefab} has the 'Attachable' component, but CanConstruct has not been assigned");
+            }
+
+            if (IsSpecialModule(collider, out GameObject root))
+            {
+                __result = comp.CanConstruct(root, out attachedModule);
                 return;
             }
 
-            while (tr != null)
+            root = UWE.Utils.GetEntityRoot(collider);
+
+            if (!comp.AllowOnNonConstructables)
             {
-                if (!tr.gameObject.TryGetComponent(out Constructable constructable))
+                Constructable constructable = root.GetComponentInChildren<Constructable>();
+                if (constructable == null)
                 {
                     // Do not allow construction on non-constructables (this also includes base parts)
-                    // It is possible we are in a 'colliders' GameObject though, so keep looking upwards
                     __result = false;
-                    tr = tr.parent;
-                    continue;
+                    return;
                 }
 
                 if (constructable.constructedAmount < 1f)
@@ -178,11 +89,9 @@ namespace AutomationAge.Systems.Attach
                     __result = false;
                     return;
                 }
-
-                attachedModule = tr.gameObject;
-                __result = func(tr.gameObject);
-                return;
             }
+
+            __result = comp.CanConstruct(root, out attachedModule);
         }
 
         // Snap specific modules to others
@@ -190,27 +99,15 @@ namespace AutomationAge.Systems.Attach
         [HarmonyPatch(typeof(Builder), nameof(Builder.SetPlaceOnSurface))]
         public static void SetPlaceOnSurfacePostfix(ref RaycastHit hit, ref Vector3 position, ref Quaternion rotation)
         {
-            if (!hit.collider.gameObject) { return; }
-            Transform tr = hit.collider.transform;
+            if (hit.collider.gameObject == null) { return; }
 
-            TechType type = Builder.lastTechType;
-            if (specialConstructionRules.TryGetValue(type, out Action<GameObject, SpecialRuleObject> action))
-            {
-                SpecialRuleObject obj = new SpecialRuleObject(position, rotation);
+            GameObject root = UWE.Utils.GetEntityRoot(hit.collider.gameObject);
+            if (root == null) { return; }
 
-                while (tr != null)
-                {
-                    action(tr.gameObject, obj);
-                    if (obj.changed)
-                    {
-                        position = obj.position;
-                        rotation = obj.rotation;
-                        return;
-                    }
+            Attachable comp = Utility.GetComponentInHigherHierarchy<Attachable>(Builder.prefab);
+            if (comp == null || comp.SnappingRule == null) { return; }
 
-                    tr = tr.parent;
-                }
-            }
+            comp.SnappingRule(root, ref position, ref rotation);
         }
 
         // Disallow deconstruction of module if it has something attached to it

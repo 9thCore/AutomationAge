@@ -58,5 +58,19 @@ namespace AutomationAge.Systems
             return FindObject(out go, position, prefabIdentifierID, DefaultSearchRadius, module);
         }
 
+        public static T GetComponentInHigherHierarchy<T>(GameObject obj)
+        {
+            if (obj.TryGetComponent(out T component))
+            {
+                return component;
+            }
+            return obj.GetComponentInParent<T>();
+        }
+
+        public static int SnapRotationToCardinal(float degrees, int offset = 0)
+        {
+            return (int)degrees * 90 + offset;
+        }
+
     }
 }
