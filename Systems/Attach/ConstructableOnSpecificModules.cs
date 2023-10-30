@@ -11,6 +11,7 @@ namespace AutomationAge.Systems.Attach
     internal static class ConstructableOnSpecificModules
     {
         public const string DeconstructAttachedMessage = "DeconstructAttachedError";
+        public const float UnattachCooldown = 1f;
 
         public static GameObject attachedModule = null;
 
@@ -107,17 +108,31 @@ namespace AutomationAge.Systems.Attach
         }
 
         // Disallow deconstruction of module if it has something attached to it
+        // Or if an attached module just got deconstructed
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Constructable), nameof(Constructable.DeconstructionAllowed))]
         public static bool ConstructableDeconstructionAllowed(Constructable __instance, ref bool __result, ref string reason)
         {
             GameObject obj = __instance.gameObject;
+            NetworkContainer container = obj.GetComponentInChildren<NetworkContainer>();
 
-            if (obj.TryGetComponent(out NetworkContainer container))
+            if (container != null)
             {
-                __result = !container.IsAnythingAttached();
-                reason = Language.main.Get(DeconstructAttachedMessage);
-                return false;
+                if (container.IsAnythingAttached())
+                {
+                    __result = false;
+                    reason = Language.main.Get(DeconstructAttachedMessage);
+                    return false;
+
+                }
+
+                JustUnattached comp = container.GetComponentInChildren<JustUnattached>();
+                if (comp != null && Time.time - comp.unattachTime < UnattachCooldown)
+                {
+                    __result = false;
+                    reason = "";
+                    return false;
+                }
             }
 
             return true;

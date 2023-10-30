@@ -105,6 +105,8 @@ namespace AutomationAge.Systems.Attach
         {
             if (constructable.constructedAmount <= 0f)
             {
+                moduleAttachedTo.EnsureComponent<JustUnattached>().unattachTime = Time.time;
+
                 RemoveAttachable();
                 Unsave();
             }
