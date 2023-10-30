@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 using AutomationAge.Systems.Network;
-using AutomationAge.Systems.Miner;
-using AutomationAge.Buildables.Items;
-using AutomationAge.Buildables.Items.Network;
 
 namespace AutomationAge.Systems.Attach
 {
