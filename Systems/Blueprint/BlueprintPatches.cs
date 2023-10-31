@@ -88,6 +88,7 @@ namespace AutomationAge.Systems.Blueprint
             GameObject obj = item.item.gameObject;
             if (!obj.TryGetComponent(out BlueprintIdentifier blueprint) || !__instance.items.TryGetValue(item, out uGUI_EquipmentSlot slot)) { return; }
 
+            blueprint.LoadSaveIfRequired();
             blueprint.AddOverlay(null, slot.icon, true);
         }
 
