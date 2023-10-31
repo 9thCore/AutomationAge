@@ -76,7 +76,9 @@ namespace AutomationAge.Systems.Attach
                 throw new ArgumentNullException("module");
             }
 
-            if (!module.TryGetComponent(out PrefabIdentifier identifier))
+            PrefabIdentifier identifier = Utility.GetComponentInHigherHierarchy<PrefabIdentifier>(module);
+
+            if (identifier == null)
             {
                 throw new ArgumentException($"Attached module {module} does not have a PrefabIdentifier!");
             }
