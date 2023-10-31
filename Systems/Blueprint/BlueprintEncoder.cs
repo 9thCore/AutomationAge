@@ -34,31 +34,16 @@ namespace AutomationAge.Systems.Blueprint
 
         public static void CreateEquipment()
         {
-            blueprintEquipmentType = EnumHandler.AddEntry<EquipmentType>(PrinterBlueprintSlot);
-            Equipment.slotMapping[PrinterBlueprintSlot] = blueprintEquipmentType;
-            anyEquipmentType = EnumHandler.AddEntry<EquipmentType>(PrinterAnySlot);
-            Equipment.slotMapping[PrinterAnySlot] = anyEquipmentType;
+            blueprintEquipmentType = Utility.CreateEquipmentType(PrinterBlueprintSlot);
+            anyEquipmentType = Utility.CreateEquipmentType(PrinterAnySlot);
         }
 
         public static void CreateEquipmentSlots(GameObject slotClone)
         {
             if (blueprintEquipmentGO != null) { return; }
 
-            blueprintEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
-            blueprintEquipmentGO.name = PrinterBlueprintSlot;
-            blueprintEquipmentGO.transform.localPosition = BlueprintSlotPosition;
-
-            anyEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
-            anyEquipmentGO.name = PrinterAnySlot;
-            anyEquipmentGO.transform.localPosition = AnySlotPosition;
-
-            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
-            uGUI_EquipmentSlot anySlot = anyEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
-
-            blueprintSlot.slot = PrinterBlueprintSlot;
-            anySlot.slot = PrinterAnySlot;
-
-            AutoCrafter.CreateEquipmentSlots(slotClone);
+            blueprintEquipmentGO = Utility.CreateEquipmentSlot(slotClone, PrinterBlueprintSlot, BlueprintSlotPosition);
+            anyEquipmentGO = Utility.CreateEquipmentSlot(slotClone, PrinterAnySlot, AnySlotPosition);
         }
 
         public static EquipmentType GetBlueprintEquipment()

@@ -1,5 +1,8 @@
 ﻿using static AutomationAge.Systems.Attach.AttachableModule;
 using UnityEngine;
+using AutomationAge.Systems.Blueprint;
+using AutomationAge.Systems.AutoCrafting;
+using Nautilus.Handlers;
 
 namespace AutomationAge.Systems
 {
@@ -72,5 +75,32 @@ namespace AutomationAge.Systems
             return (int)degrees * 90 + offset;
         }
 
+        public static GameObject CreateEquipmentSlot(GameObject slotClone, string name, Vector3 position = default)
+        {
+            GameObject equipmentSlot = Object.Instantiate(slotClone, slotClone.transform.parent);
+            equipmentSlot.name = name;
+            equipmentSlot.transform.localPosition = position;
+            equipmentSlot.GetComponent<uGUI_EquipmentSlot>().slot = name;
+
+            return equipmentSlot;
+        }
+
+        public static void CreateEquipmentSlots(GameObject slotClone)
+        {
+            BlueprintEncoder.CreateEquipmentSlots(slotClone);
+            AutoCrafter.CreateEquipmentSlots(slotClone);
+        }
+
+        public static EquipmentType CreateEquipmentType(string name)
+        {
+            EquipmentType type = EnumHandler.AddEntry<EquipmentType>(name);
+            MapEquipmentType(name, type);
+            return type;
+        }
+
+        public static void MapEquipmentType(string name, EquipmentType type)
+        {
+            Equipment.slotMapping.Add(name, type);
+        }
     }
 }

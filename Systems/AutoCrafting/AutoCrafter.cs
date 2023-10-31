@@ -94,15 +94,8 @@ namespace AutomationAge.Systems.AutoCrafting
         {
             if (blueprintEquipmentGO != null) { return; }
 
-            blueprintEquipmentGO = Instantiate(slotClone, slotClone.transform.parent);
-            blueprintEquipmentGO.name = CrafterBlueprintSlot;
-            blueprintEquipmentGO.transform.localPosition = Vector3.zero;
-
-            uGUI_EquipmentSlot blueprintSlot = blueprintEquipmentGO.GetComponent<uGUI_EquipmentSlot>();
-
-            blueprintSlot.slot = CrafterBlueprintSlot;
-
-            Equipment.slotMapping[CrafterBlueprintSlot] = BlueprintEncoder.blueprintEquipmentType;
+            blueprintEquipmentGO = Utility.CreateEquipmentSlot(slotClone, CrafterBlueprintSlot);
+            Utility.MapEquipmentType(CrafterBlueprintSlot, BlueprintEncoder.blueprintEquipmentType);
         }
 
         public void OpenEquipmentPDA(HandTargetEventData data)

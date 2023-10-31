@@ -139,7 +139,7 @@ namespace AutomationAge.Systems.Blueprint
             {
                 if (slot.slot == BaseNuclearReactor.slotIDs[0])
                 {
-                    BlueprintEncoder.CreateEquipmentSlots(slot.gameObject);
+                    Utility.CreateEquipmentSlots(slot.gameObject);
                     return;
                 }
             }
