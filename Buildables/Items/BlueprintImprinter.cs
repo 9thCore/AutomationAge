@@ -29,6 +29,8 @@ namespace AutomationAge.Buildables.Items
                     new Ingredient(TechType.AdvancedWiringKit, 1)))
                 .WithCraftingTime(10.0f);
             prefab.Register();
+
+            BlueprintEncoder.InitEquipment();
         }
 
         public static GameObject GetGameObject()

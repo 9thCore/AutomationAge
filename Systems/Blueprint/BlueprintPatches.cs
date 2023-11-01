@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using AutomationAge.Items;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,7 +140,7 @@ namespace AutomationAge.Systems.Blueprint
             {
                 if (slot.slot == BaseNuclearReactor.slotIDs[0])
                 {
-                    Utility.CreateEquipmentSlots(slot.gameObject);
+                    EquipmentHandler.CreateEquipmentSlots(slot.gameObject);
                     return;
                 }
             }
@@ -149,7 +150,7 @@ namespace AutomationAge.Systems.Blueprint
         [HarmonyPrefix]
         public static bool IsCompatiblePrefix(EquipmentType itemType, EquipmentType slotType, ref bool __result)
         {
-            if (itemType != BlueprintEncoder.blueprintEquipmentType && slotType == BlueprintEncoder.anyEquipmentType)
+            if (itemType != ItemBlueprint.BlueprintEquipmentType && slotType == BlueprintEncoder.anyEquipmentType)
             {
                 __result = true;
                 return false;

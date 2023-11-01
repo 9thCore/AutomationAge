@@ -1,4 +1,5 @@
 ﻿using AutomationAge.Buildables.Items;
+using AutomationAge.Items;
 using AutomationAge.Systems.AutoCrafting;
 using Nautilus.Handlers;
 using System.Collections;
@@ -26,33 +27,20 @@ namespace AutomationAge.Systems.Blueprint
         public Image screenBackground;
         public uGUI_ItemIcon screenIcon;
 
-        public static EquipmentType blueprintEquipmentType = EquipmentType.None;
-        public static EquipmentType anyEquipmentType = EquipmentType.None;
+        public static EquipmentType anyEquipmentType = EquipmentHandler.CreateEquipmentType(PrinterAnySlot);
 
         public static GameObject blueprintEquipmentGO = null;
         public static GameObject anyEquipmentGO = null;
 
-        public static void CreateEquipment()
+        public static void InitEquipment()
         {
-            blueprintEquipmentType = Utility.CreateEquipmentType(PrinterBlueprintSlot);
-            anyEquipmentType = Utility.CreateEquipmentType(PrinterAnySlot);
-        }
-
-        public static void CreateEquipmentSlots(GameObject slotClone)
-        {
-            if (blueprintEquipmentGO != null) { return; }
-
-            blueprintEquipmentGO = Utility.CreateEquipmentSlot(slotClone, PrinterBlueprintSlot, BlueprintSlotPosition);
-            anyEquipmentGO = Utility.CreateEquipmentSlot(slotClone, PrinterAnySlot, AnySlotPosition);
-        }
-
-        public static EquipmentType GetBlueprintEquipment()
-        {
-            if (blueprintEquipmentType == EquipmentType.None)
+            EquipmentHandler.InitEquipment += () =>
             {
-                CreateEquipment();
-            }
-            return blueprintEquipmentType;
+                EquipmentHandler.MapEquipmentType(PrinterBlueprintSlot, ItemBlueprint.BlueprintEquipmentType);
+
+                blueprintEquipmentGO = EquipmentHandler.CreateEquipmentSlot(PrinterBlueprintSlot, BlueprintSlotPosition);
+                anyEquipmentGO = EquipmentHandler.CreateEquipmentSlot(PrinterAnySlot, AnySlotPosition);
+            };
         }
 
         public void Start()
@@ -198,7 +186,7 @@ namespace AutomationAge.Systems.Blueprint
 
         public bool GetCompatibleSlot(EquipmentType type, out string slot)
         {
-            if (type == blueprintEquipmentType)
+            if (type == ItemBlueprint.BlueprintEquipmentType)
             {
                 slot = PrinterBlueprintSlot;
                 return true;

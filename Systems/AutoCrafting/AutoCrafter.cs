@@ -38,6 +38,15 @@ namespace AutomationAge.Systems.AutoCrafting
         public const string CrafterBlueprintSlot = "Crafter_BlueprintSlot";
         public static GameObject blueprintEquipmentGO = null;
 
+        public static void InitEquipment()
+        {
+            EquipmentHandler.InitEquipment += () =>
+            {
+                blueprintEquipmentGO = EquipmentHandler.CreateEquipmentSlot(CrafterBlueprintSlot);
+                EquipmentHandler.MapEquipmentType(CrafterBlueprintSlot, ItemBlueprint.BlueprintEquipmentType);
+            };
+        }
+
         public override void OnAttach(GameObject module)
         {
             container = module.GetComponentInChildren<NetworkContainer>();
@@ -88,14 +97,6 @@ namespace AutomationAge.Systems.AutoCrafting
             {
                 CoroutineHost.StartCoroutine(CreateBlueprint(crafterSaveData.craftType));
             }
-        }
-        
-        public static void CreateEquipmentSlots(GameObject slotClone)
-        {
-            if (blueprintEquipmentGO != null) { return; }
-
-            blueprintEquipmentGO = Utility.CreateEquipmentSlot(slotClone, CrafterBlueprintSlot);
-            Utility.MapEquipmentType(CrafterBlueprintSlot, BlueprintEncoder.blueprintEquipmentType);
         }
 
         public void OpenEquipmentPDA(HandTargetEventData data)
@@ -161,7 +162,7 @@ namespace AutomationAge.Systems.AutoCrafting
 
         public bool GetCompatibleSlot(EquipmentType itemType, out string slot)
         {
-            if (itemType == BlueprintEncoder.blueprintEquipmentType)
+            if (itemType == ItemBlueprint.BlueprintEquipmentType)
             {
                 slot = CrafterBlueprintSlot;
                 return true;

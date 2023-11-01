@@ -31,6 +31,8 @@ namespace AutomationAge.Buildables.Items
                     new Ingredient(TechType.ComputerChip, 1)))
                 .WithCraftingTime(10.0f);
             prefab.Register();
+
+            AutoCrafter.InitEquipment();
         }
 
         public static GameObject GetGameObject()

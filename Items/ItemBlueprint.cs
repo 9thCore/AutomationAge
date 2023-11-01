@@ -5,12 +5,15 @@ using Nautilus.Assets.Gadgets;
 using Nautilus.Assets.PrefabTemplates;
 using UnityEngine;
 using AutomationAge.Systems.Blueprint;
-using Nautilus.Handlers;
+using AutomationAge.Systems;
 
 namespace AutomationAge.Items
 {
     internal static class ItemBlueprint
     {
+        public const string BlueprintEquipmentName = "Blueprint_EquipmentType";
+        public static readonly EquipmentType BlueprintEquipmentType = EquipmentHandler.CreateEquipmentType(BlueprintEquipmentName);
+
         public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("ItemBlueprint", "Item Blueprint", "Contains data about an item, such as its molecular structure. Can be read and used by filter systems.")
             .WithIcon(SpriteManager.Get(TechType.Silicone));
 
@@ -31,7 +34,7 @@ namespace AutomationAge.Items
                 .WithFabricatorType(CraftTree.Type.Fabricator);
 
             prefab.SetPdaGroupCategory(TechGroup.Personal, TechCategory.Equipment);
-            prefab.SetEquipment(BlueprintEncoder.GetBlueprintEquipment());
+            prefab.SetEquipment(BlueprintEquipmentType);
 
             prefab.Register();
         }
