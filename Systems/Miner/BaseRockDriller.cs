@@ -9,7 +9,7 @@ using AutomationAge.Systems.Attach;
 
 namespace AutomationAge.Systems.Miner
 {
-    internal class Driller : AttachableModule
+    internal class BaseRockDriller : AttachableModule
     {
         public const float HitTime = 1f;
         public const float MinePowerConsumption = 2.5f;

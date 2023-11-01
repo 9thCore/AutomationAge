@@ -1,7 +1,5 @@
 ﻿using AutomationAge.Buildables.Items;
 using AutomationAge.Items;
-using AutomationAge.Systems.AutoCrafting;
-using Nautilus.Handlers;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +7,7 @@ using UWE;
 
 namespace AutomationAge.Systems.Blueprint
 {
-    internal class BlueprintEncoder : MonoBehaviour, IConstructable, IObstacle, IHandTarget
+    internal class BaseBlueprintEncoder : MonoBehaviour, IConstructable, IObstacle, IHandTarget
     {
         public const string BlueprintEncoderLabel = "BlueprintEncoderLabel";
         public const string BlueprintEncoderUse = "UseBlueprintEncoder";
@@ -45,9 +43,9 @@ namespace AutomationAge.Systems.Blueprint
 
         public void Start()
         {
-            root = gameObject.FindChild(BlueprintImprinter.ItemRootName).GetComponent<ChildObjectIdentifier>();
+            root = gameObject.FindChild(BlueprintEncoder.ItemRootName).GetComponent<ChildObjectIdentifier>();
             identifier = gameObject.GetComponent<PrefabIdentifier>();
-            screen = gameObject.FindChild(BlueprintImprinter.ScreenName);
+            screen = gameObject.FindChild(BlueprintEncoder.ScreenName);
 
             screenBackground = screen.FindChild("Background").GetComponent<Image>();
             screenIcon = screen.FindChild("Icon").GetComponent<uGUI_ItemIcon>();

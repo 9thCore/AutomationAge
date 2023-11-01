@@ -47,7 +47,7 @@ namespace AutomationAge.Systems.Miner
         private string _biome;
         private string Biome => _biome ??= LargeWorld.main.GetBiome(transform.position);
 
-        public Driller drillAttachment = null;
+        public BaseRockDriller drillAttachment = null;
 
         public PowerRelay powerRelay;
 

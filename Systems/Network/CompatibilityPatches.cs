@@ -16,7 +16,7 @@ namespace AutomationAge.Systems.Network
             // Blacklist certain objects from using the NetworkContainer
             if (__instance.TryGetComponent(out NetworkItemRequester _)
                 || __instance.TryGetComponent(out Planter _)
-                || __instance.GetComponentInParent<Driller>() != null) { return; }
+                || __instance.GetComponentInParent<BaseRockDriller>() != null) { return; }
 
             if (!__instance.TryGetComponent(out NetworkContainerRestriction _))
             {

@@ -32,7 +32,7 @@ namespace AutomationAge.Buildables.Items
                 .WithCraftingTime(10.0f);
             prefab.Register();
 
-            AutoCrafter.InitEquipment();
+            BaseAutoFabricator.InitEquipment();
         }
 
         public static GameObject GetGameObject()
@@ -42,7 +42,7 @@ namespace AutomationAge.Buildables.Items
 
             GameObject inputContainer = obj.transform.Find(InputContainerName).gameObject;
 
-            obj.AddComponent<AutoCrafter>();
+            obj.AddComponent<BaseAutoFabricator>();
             inputContainer.AddComponent<NetworkContainerRestriction>().Restrict(interfaceAllowed: false, requesterAllowed: true);
             NetworkContainer c = inputContainer.AddComponent<NetworkContainer>();
             c.PrefabRoot = obj;

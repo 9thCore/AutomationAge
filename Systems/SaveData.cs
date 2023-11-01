@@ -46,7 +46,7 @@ namespace AutomationAge.Systems
     internal class CrafterSaveData
     {
         [JsonIgnore]
-        internal AutoCrafter crafter;
+        internal BaseAutoFabricator crafter;
 
         public TechType craftType = TechType.None;
         public List<TechType> byproducts = new List<TechType>();
@@ -66,7 +66,7 @@ namespace AutomationAge.Systems
     internal class BlueprintEncoderSaveData
     {
         [JsonIgnore]
-        internal BlueprintEncoder encoder;
+        internal BaseBlueprintEncoder encoder;
 
         public bool Operating = false;
         public float OperationDuration = 0f;

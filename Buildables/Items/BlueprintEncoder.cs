@@ -9,12 +9,12 @@ using AutomationAge.Systems.Blueprint;
 
 namespace AutomationAge.Buildables.Items
 {
-    internal class BlueprintImprinter
+    internal class BlueprintEncoder
     {
         public const string ItemRootName = "ItemRoot";
         public const string ScreenName = "Screen";
 
-        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("BlueprintImprinter", "Blueprint Imprinter", "Fully dematerializes the given item and encodes its molecular data into the blueprint.")
+        public static PrefabInfo Info { get; } = PrefabInfo.WithTechType("BlueprintImprinter", "Blueprint Encoder", "Fully dematerializes the given item and encodes its molecular data into the blueprint.")
             .WithIcon(SpriteManager.Get(TechType.Workbench));
 
         public static void Register()
@@ -30,7 +30,7 @@ namespace AutomationAge.Buildables.Items
                 .WithCraftingTime(10.0f);
             prefab.Register();
 
-            BlueprintEncoder.InitEquipment();
+            BaseBlueprintEncoder.InitEquipment();
         }
 
         public static GameObject GetGameObject()
@@ -38,7 +38,7 @@ namespace AutomationAge.Buildables.Items
             GameObject obj = Assets.GetGameObject("BlueprintImprinter");
             GameObject model = obj.transform.Find("Model").gameObject;
 
-            obj.AddComponent<BlueprintEncoder>();
+            obj.AddComponent<BaseBlueprintEncoder>();
 
             ConstructableFlags constructableFlags = ConstructableFlags.Inside | ConstructableFlags.Ground | ConstructableFlags.Rotatable;
             PrefabUtils.AddBasicComponents(obj, Info.ClassID, Info.TechType, LargeWorldEntity.CellLevel.Near);

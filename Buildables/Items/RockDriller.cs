@@ -44,7 +44,7 @@ namespace AutomationAge.Buildables.Items
             GameObject obj = Assets.GetGameObject(MainObject);
             GameObject model = obj.transform.Find(ModelObject).gameObject;
 
-            obj.AddComponent<Driller>();
+            obj.AddComponent<BaseRockDriller>();
 
             Attachable check = obj.AddComponent<Attachable>();
             check.CanConstruct = (GameObject input, out GameObject module) =>

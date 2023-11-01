@@ -14,7 +14,7 @@ using UWE;
 
 namespace AutomationAge.Systems.AutoCrafting
 {
-    internal class AutoCrafter : AttachableModule
+    internal class BaseAutoFabricator : AttachableModule
     {
         public const string AutoCrafterLabel = "AutoCrafterLabel";
         public const string AutoCrafterBlueprintUse = "UseAutoCrafterBlueprint";
