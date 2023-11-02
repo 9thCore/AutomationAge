@@ -38,13 +38,18 @@ namespace AutomationAge.Systems.Network.Item
             consumer = gameObject.EnsureComponent<PowerConsumer>();
         }
 
-        public override void StartBehaviour()
+        public override void Start()
         {
-            keepRequesting = true;
+            base.Start();
 
             // Randomise request for each requester so they don't all run at the same time
             // Don't bother with accurate ordering tbh
-            Invoke("QueueRequest", Random.value);
+            InvokeRepeating("TryRequest", Random.value, RequestDelay);
+        }
+
+        public override void StartBehaviour()
+        {
+            keepRequesting = true;
         }
 
         public override void StopBehaviour()
@@ -52,25 +57,12 @@ namespace AutomationAge.Systems.Network.Item
             keepRequesting = false;
         }
 
-        public override void RemoveAttachable()
+        public void TryRequest()
         {
-            Container.requesterAttached = false;
-            Filter.OnDestroy();
-        }
+            if (!keepRequesting) { return; }
+            if (Filter.container.IsEmpty()) { return; }
 
-        public void QueueRequest()
-        {
-            CoroutineHost.StartCoroutine(DelayedRequest());
-        }
-
-        public IEnumerator DelayedRequest()
-        {
-            yield return new WaitForSeconds(RequestDelay);
-            if (!keepRequesting) { yield break; }
-            if (!Filter.container.IsEmpty()) { Request(); }
-
-            // Request stuff again
-            QueueRequest();
+            Request();
         }
 
         public void Request()
