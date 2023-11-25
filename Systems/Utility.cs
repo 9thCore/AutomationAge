@@ -3,6 +3,7 @@ using UnityEngine;
 using AutomationAge.Systems.Blueprint;
 using AutomationAge.Systems.AutoCrafting;
 using Nautilus.Handlers;
+using System;
 
 namespace AutomationAge.Systems
 {
@@ -18,37 +19,43 @@ namespace AutomationAge.Systems
 
             for (int i = 0; i < colliders.Length; i++)
             {
-                Transform tr = colliders[i].transform;
-                while (tr != null)
+                GameObject obj = colliders[i].gameObject;
+                PrefabIdentifier id = null;
+
+                switch(module)
                 {
-                    go = tr.gameObject;
+                    case SpecialModule.None:
+                        id = GetComponentInHigherHierarchy<PrefabIdentifier>(obj);
+                        break;
+                    case SpecialModule.NuclearReactor:
+                        BaseNuclearReactorGeometry geometry = GetComponentInHigherHierarchy<BaseNuclearReactorGeometry>(obj);
+                        if (geometry != null)
+                        {
+                            id = GetComponentInHigherHierarchy<PrefabIdentifier>(geometry.GetModule().gameObject);
+                        }
+                        break;
+                    case SpecialModule.BioReactor:
+                        BaseBioReactorGeometry geometry1 = GetComponentInHigherHierarchy<BaseBioReactorGeometry>(obj);
+                        if (geometry1 != null)
+                        {
+                            id = GetComponentInHigherHierarchy<PrefabIdentifier>(geometry1.GetModule().gameObject);
+                        }
+                        break;
+                    case SpecialModule.WaterPark:
+                        WaterParkGeometry geometry2 = GetComponentInHigherHierarchy<WaterParkGeometry>(obj);
+                        if (geometry2 != null)
+                        {
+                            id = GetComponentInHigherHierarchy<PrefabIdentifier>(geometry2.GetModule().gameObject);
+                        }
+                        break;
+                    default:
+                        throw new ArgumentException();
+                }
 
-                    switch (module)
-                    {
-                        case SpecialModule.NuclearReactor:
-                            GameObject obj = go.transform.parent.gameObject;
-                            if (obj.TryGetComponent(out BaseNuclearReactorGeometry geometry))
-                            {
-                                go = geometry.GetModule().gameObject;
-                            }
-                            break;
-                        case SpecialModule.BioReactor:
-                            GameObject obj1 = go.transform.parent.gameObject;
-                            if (obj1.TryGetComponent(out BaseBioReactorGeometry geometry1))
-                            {
-                                go = geometry1.GetModule().gameObject;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-
-                    if (go.TryGetComponent(out PrefabIdentifier identifier) && identifier.Id == prefabIdentifierID)
-                    {
-                        return true;
-                    }
-
-                    tr = tr.parent;
+                if (id != null && id.Id == prefabIdentifierID)
+                {
+                    go = id.gameObject;
+                    return true;
                 }
             }
 
